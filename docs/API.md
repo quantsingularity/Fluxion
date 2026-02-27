@@ -72,15 +72,15 @@ curl -X POST http://localhost:8000/api/v1/auth/login \
 
 ```json
 {
-    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "token_type": "bearer",
-    "expires_in": 3600,
-    "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "user": {
-        "id": "user-123",
-        "username": "trader@example.com",
-        "roles": ["trader"]
-    }
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "token_type": "bearer",
+  "expires_in": 3600,
+  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": {
+    "id": "user-123",
+    "username": "trader@example.com",
+    "roles": ["trader"]
+  }
 }
 ```
 
@@ -149,16 +149,16 @@ curl -X POST http://localhost:8000/api/v1/order \
 
 ```json
 {
-    "order_id": "ord_1234567890",
-    "status": "PENDING",
-    "asset_id": "BTC-USD",
-    "side": "BUY",
-    "amount": "0.5",
-    "filled_amount": "0",
-    "order_type": "MARKET",
-    "timestamp": "2024-01-15T10:30:00Z",
-    "estimated_price": "50125.50",
-    "estimated_slippage": "0.0025"
+  "order_id": "ord_1234567890",
+  "status": "PENDING",
+  "asset_id": "BTC-USD",
+  "side": "BUY",
+  "amount": "0.5",
+  "filled_amount": "0",
+  "order_type": "MARKET",
+  "timestamp": "2024-01-15T10:30:00Z",
+  "estimated_price": "50125.50",
+  "estimated_slippage": "0.0025"
 }
 ```
 
@@ -181,18 +181,18 @@ curl -X GET http://localhost:8000/api/v1/order/ord_1234567890 \
 
 ```json
 {
-    "order_id": "ord_1234567890",
-    "status": "FILLED",
-    "asset_id": "BTC-USD",
-    "side": "BUY",
-    "amount": "0.5",
-    "filled_amount": "0.5",
-    "average_price": "50150.25",
-    "order_type": "MARKET",
-    "created_at": "2024-01-15T10:30:00Z",
-    "filled_at": "2024-01-15T10:30:05Z",
-    "fees": "25.08",
-    "transaction_hashes": ["0x1234abcd..."]
+  "order_id": "ord_1234567890",
+  "status": "FILLED",
+  "asset_id": "BTC-USD",
+  "side": "BUY",
+  "amount": "0.5",
+  "filled_amount": "0.5",
+  "average_price": "50150.25",
+  "order_type": "MARKET",
+  "created_at": "2024-01-15T10:30:00Z",
+  "filled_at": "2024-01-15T10:30:05Z",
+  "fees": "25.08",
+  "transaction_hashes": ["0x1234abcd..."]
 }
 ```
 
@@ -258,12 +258,12 @@ curl -X POST http://localhost:8000/api/v1/pool/pool_eth_usdc/deposit \
 
 ```json
 {
-    "transaction_id": "tx_deposit_123",
-    "pool_id": "pool_eth_usdc",
-    "lp_tokens_received": "10000",
-    "share_percentage": "0.5",
-    "transaction_hash": "0xabcd1234...",
-    "status": "CONFIRMED"
+  "transaction_id": "tx_deposit_123",
+  "pool_id": "pool_eth_usdc",
+  "lp_tokens_received": "10000",
+  "share_percentage": "0.5",
+  "transaction_hash": "0xabcd1234...",
+  "status": "CONFIRMED"
 }
 ```
 
@@ -307,30 +307,30 @@ curl -X GET http://localhost:8000/api/v1/pool/pool_eth_usdc/stats \
 
 ```json
 {
-    "pool_id": "pool_eth_usdc",
-    "name": "ETH-USDC Liquidity Pool",
-    "tvl": "125000000.50",
-    "volume_24h": "5250000.00",
-    "volume_7d": "38500000.00",
-    "fees_24h": "15750.00",
-    "apy": "12.5",
-    "utilization": "0.68",
-    "assets": [
-        {
-            "asset": "ETH",
-            "balance": "25000",
-            "weight": "0.5",
-            "price_usd": "3000.50"
-        },
-        {
-            "asset": "USDC",
-            "balance": "50000000",
-            "weight": "0.5",
-            "price_usd": "1.0"
-        }
-    ],
-    "total_lp_tokens": "2000000",
-    "lp_token_price": "62.50"
+  "pool_id": "pool_eth_usdc",
+  "name": "ETH-USDC Liquidity Pool",
+  "tvl": "125000000.50",
+  "volume_24h": "5250000.00",
+  "volume_7d": "38500000.00",
+  "fees_24h": "15750.00",
+  "apy": "12.5",
+  "utilization": "0.68",
+  "assets": [
+    {
+      "asset": "ETH",
+      "balance": "25000",
+      "weight": "0.5",
+      "price_usd": "3000.50"
+    },
+    {
+      "asset": "USDC",
+      "balance": "50000000",
+      "weight": "0.5",
+      "price_usd": "1.0"
+    }
+  ],
+  "total_lp_tokens": "2000000",
+  "lp_token_price": "62.50"
 }
 ```
 
@@ -371,19 +371,19 @@ curl -X GET http://localhost:8000/api/v1/risk/metrics \
 
 ```json
 {
-    "var_95": "15250.50",
-    "var_99": "22500.75",
-    "expected_shortfall": "18000.25",
-    "sharpe_ratio": "1.85",
-    "beta": "1.12",
-    "volatility": "0.25",
-    "max_drawdown": "0.18",
-    "correlation_matrix": {
-        "BTC-USD": { "ETH-USD": 0.85, "SOL-USD": 0.72 },
-        "ETH-USD": { "BTC-USD": 0.85, "SOL-USD": 0.78 }
-    },
-    "liquidation_risk": "LOW",
-    "health_factor": "2.5"
+  "var_95": "15250.50",
+  "var_99": "22500.75",
+  "expected_shortfall": "18000.25",
+  "sharpe_ratio": "1.85",
+  "beta": "1.12",
+  "volatility": "0.25",
+  "max_drawdown": "0.18",
+  "correlation_matrix": {
+    "BTC-USD": { "ETH-USD": 0.85, "SOL-USD": 0.72 },
+    "ETH-USD": { "BTC-USD": 0.85, "SOL-USD": 0.78 }
+  },
+  "liquidation_risk": "LOW",
+  "health_factor": "2.5"
 }
 ```
 
@@ -425,26 +425,26 @@ curl -X GET "http://localhost:8000/api/v1/ai/predictions/BTC-USD?horizon=48&inte
 
 ```json
 {
-    "asset_id": "BTC-USD",
-    "current_price": "50000.00",
-    "model_version": "v2.3.1",
-    "generated_at": "2024-01-15T10:30:00Z",
-    "predictions": [
-        {
-            "timestamp": "2024-01-15T14:30:00Z",
-            "price": "50250.00",
-            "confidence": 0.85,
-            "lower_bound": "49800.00",
-            "upper_bound": "50700.00"
-        },
-        {
-            "timestamp": "2024-01-15T18:30:00Z",
-            "price": "50500.00",
-            "confidence": 0.78,
-            "lower_bound": "49900.00",
-            "upper_bound": "51100.00"
-        }
-    ]
+  "asset_id": "BTC-USD",
+  "current_price": "50000.00",
+  "model_version": "v2.3.1",
+  "generated_at": "2024-01-15T10:30:00Z",
+  "predictions": [
+    {
+      "timestamp": "2024-01-15T14:30:00Z",
+      "price": "50250.00",
+      "confidence": 0.85,
+      "lower_bound": "49800.00",
+      "upper_bound": "50700.00"
+    },
+    {
+      "timestamp": "2024-01-15T18:30:00Z",
+      "price": "50500.00",
+      "confidence": 0.78,
+      "lower_bound": "49900.00",
+      "upper_bound": "51100.00"
+    }
+  ]
 }
 ```
 
@@ -479,21 +479,21 @@ curl -X GET http://localhost:8000/api/v1/ai/arbitrage/opportunities \
 
 ```json
 {
-    "opportunities": [
-        {
-            "id": "arb_123",
-            "asset": "USDC",
-            "buy_chain": "ethereum",
-            "sell_chain": "polygon",
-            "buy_price": "1.0",
-            "sell_price": "1.003",
-            "profit_bps": 30,
-            "estimated_profit_usd": "300.00",
-            "required_capital": "100000.00",
-            "expiry": "2024-01-15T10:35:00Z",
-            "risk_score": 0.15
-        }
-    ]
+  "opportunities": [
+    {
+      "id": "arb_123",
+      "asset": "USDC",
+      "buy_chain": "ethereum",
+      "sell_chain": "polygon",
+      "buy_price": "1.0",
+      "sell_price": "1.003",
+      "profit_bps": 30,
+      "estimated_profit_usd": "300.00",
+      "required_capital": "100000.00",
+      "expiry": "2024-01-15T10:35:00Z",
+      "risk_score": 0.15
+    }
+  ]
 }
 ```
 
@@ -529,14 +529,14 @@ curl -X POST http://localhost:8000/api/v1/crosschain/bridge \
 
 ```json
 {
-    "bridge_id": "bridge_789",
-    "status": "INITIATED",
-    "from_tx_hash": "0x1234...",
-    "estimated_completion": "2024-01-15T10:45:00Z",
-    "fees": {
-        "bridge_fee": "10.00",
-        "gas_fee": "15.50"
-    }
+  "bridge_id": "bridge_789",
+  "status": "INITIATED",
+  "from_tx_hash": "0x1234...",
+  "estimated_completion": "2024-01-15T10:45:00Z",
+  "fees": {
+    "bridge_fee": "10.00",
+    "gas_fee": "15.50"
+  }
 }
 ```
 
@@ -561,18 +561,18 @@ Get system health and status (requires admin role).
 
 ```json
 {
-    "status": "healthy",
-    "uptime": 86400,
-    "services": {
-        "database": { "status": "healthy", "latency_ms": 5 },
-        "redis": { "status": "healthy", "latency_ms": 2 },
-        "blockchain_rpc": { "status": "healthy", "latency_ms": 150 }
-    },
-    "metrics": {
-        "active_users": 1250,
-        "orders_24h": 8500,
-        "tvl": "125000000.50"
-    }
+  "status": "healthy",
+  "uptime": 86400,
+  "services": {
+    "database": { "status": "healthy", "latency_ms": 5 },
+    "redis": { "status": "healthy", "latency_ms": 2 },
+    "blockchain_rpc": { "status": "healthy", "latency_ms": 150 }
+  },
+  "metrics": {
+    "active_users": 1250,
+    "orders_24h": 8500,
+    "tvl": "125000000.50"
+  }
 }
 ```
 
@@ -588,9 +588,9 @@ wss://api.fluxion.exchange/ws/v1
 
 ```json
 {
-    "type": "subscribe",
-    "channels": ["trades", "orderbook", "liquidations"],
-    "symbols": ["BTC-USD", "ETH-USD"]
+  "type": "subscribe",
+  "channels": ["trades", "orderbook", "liquidations"],
+  "symbols": ["BTC-USD", "ETH-USD"]
 }
 ```
 
@@ -598,9 +598,9 @@ wss://api.fluxion.exchange/ws/v1
 
 ```json
 {
-    "type": "unsubscribe",
-    "channels": ["trades"],
-    "symbols": ["BTC-USD"]
+  "type": "unsubscribe",
+  "channels": ["trades"],
+  "symbols": ["BTC-USD"]
 }
 ```
 
@@ -610,12 +610,12 @@ wss://api.fluxion.exchange/ws/v1
 
 ```json
 {
-    "type": "trade",
-    "symbol": "BTC-USD",
-    "price": "50125.50",
-    "amount": "0.5",
-    "side": "BUY",
-    "timestamp": "2024-01-15T10:30:05Z"
+  "type": "trade",
+  "symbol": "BTC-USD",
+  "price": "50125.50",
+  "amount": "0.5",
+  "side": "BUY",
+  "timestamp": "2024-01-15T10:30:05Z"
 }
 ```
 
@@ -623,17 +623,17 @@ wss://api.fluxion.exchange/ws/v1
 
 ```json
 {
-    "type": "orderbook",
-    "symbol": "ETH-USD",
-    "bids": [
-        ["3000.50", "10.5"],
-        ["3000.25", "8.2"]
-    ],
-    "asks": [
-        ["3001.00", "12.3"],
-        ["3001.25", "15.7"]
-    ],
-    "timestamp": "2024-01-15T10:30:00Z"
+  "type": "orderbook",
+  "symbol": "ETH-USD",
+  "bids": [
+    ["3000.50", "10.5"],
+    ["3000.25", "8.2"]
+  ],
+  "asks": [
+    ["3001.00", "12.3"],
+    ["3001.25", "15.7"]
+  ],
+  "timestamp": "2024-01-15T10:30:00Z"
 }
 ```
 
@@ -643,14 +643,14 @@ wss://api.fluxion.exchange/ws/v1
 
 ```json
 {
-    "error": "Detailed error message",
-    "error_code": "ERROR_CODE",
-    "details": {
-        "field": "amount",
-        "issue": "Must be greater than 0"
-    },
-    "timestamp": "2024-01-15T10:30:00Z",
-    "request_id": "req_123456"
+  "error": "Detailed error message",
+  "error_code": "ERROR_CODE",
+  "details": {
+    "field": "amount",
+    "issue": "Must be greater than 0"
+  },
+  "timestamp": "2024-01-15T10:30:00Z",
+  "request_id": "req_123456"
 }
 ```
 
@@ -682,10 +682,10 @@ When rate limit is exceeded:
 
 ```json
 {
-    "error": "Rate limit exceeded",
-    "error_code": "RATE_LIMIT_EXCEEDED",
-    "retry_after": 60,
-    "timestamp": "2024-01-15T10:30:00Z"
+  "error": "Rate limit exceeded",
+  "error_code": "RATE_LIMIT_EXCEEDED",
+  "retry_after": 60,
+  "timestamp": "2024-01-15T10:30:00Z"
 }
 ```
 

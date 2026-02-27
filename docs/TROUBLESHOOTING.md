@@ -305,9 +305,9 @@ npm run build -- --skipLibCheck
 **Code check:**
 
 ```javascript
-if (typeof window.ethereum === 'undefined') {
-    console.error('Please install MetaMask');
-    // Show user-friendly message
+if (typeof window.ethereum === "undefined") {
+  console.error("Please install MetaMask");
+  // Show user-friendly message
 }
 ```
 
@@ -401,13 +401,13 @@ forge install OpenZeppelin/openzeppelin-contracts
 ```javascript
 // Increase gas limit manually
 const tx = await contract.methodName(args, {
-    gasLimit: 500000, // Or higher
+  gasLimit: 500000, // Or higher
 });
 
 // Or estimate with buffer
 const estimatedGas = await contract.estimateGas.methodName(args);
 const tx = await contract.methodName(args, {
-    gasLimit: (estimatedGas * 120n) / 100n, // 20% buffer
+  gasLimit: (estimatedGas * 120n) / 100n, // 20% buffer
 });
 ```
 
@@ -716,20 +716,20 @@ grep -i "union\|select\|drop" logs/access.log
 **Action Plan:**
 
 1. **Immediate:**
-    - Transfer all funds to new wallet
-    - Revoke all approvals on compromised wallet
-    - Notify team/users
+   - Transfer all funds to new wallet
+   - Revoke all approvals on compromised wallet
+   - Notify team/users
 
 2. **Investigation:**
-    - Check commit history for exposed keys
-    - Review server access logs
-    - Scan for malware
+   - Check commit history for exposed keys
+   - Review server access logs
+   - Scan for malware
 
 3. **Prevention:**
-    - Use hardware wallets for production
-    - Never commit private keys
-    - Use .env files (in .gitignore)
-    - Rotate keys regularly
+   - Use hardware wallets for production
+   - Never commit private keys
+   - Use .env files (in .gitignore)
+   - Rotate keys regularly
 
 ## Getting More Help
 
@@ -749,17 +749,17 @@ forge test -vvvv
 ```
 
 2. **Search GitHub issues:**
-    - [Fluxion Issues](https://github.com/quantsingularity/Fluxion/issues)
+   - [Fluxion Issues](https://github.com/quantsingularity/Fluxion/issues)
 
 3. **Create new issue:**
-    - Provide error messages
-    - Include steps to reproduce
-    - Share relevant logs
-    - Specify environment (OS, versions)
+   - Provide error messages
+   - Include steps to reproduce
+   - Share relevant logs
+   - Specify environment (OS, versions)
 
 4. **Community support:**
-    - GitHub Discussions
-    - Project Discord/Telegram (if available)
+   - GitHub Discussions
+   - Project Discord/Telegram (if available)
 
 ## Error Code Reference
 

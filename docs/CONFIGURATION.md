@@ -304,55 +304,55 @@ VITE_CURRENCY=USD
 ### Docker Compose Configuration (infrastructure/docker-compose.yml)
 
 ```yaml
-version: '3.8'
+version: "3.8"
 
 services:
-    backend:
-        build: ./code/backend
-        ports:
-            - '8000:8000'
-        environment:
-            - DATABASE_URL=${DATABASE_URL}
-            - REDIS_URL=${REDIS_URL}
-        depends_on:
-            - postgres
-            - redis
-        restart: unless-stopped
+  backend:
+    build: ./code/backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
 
-    frontend:
-        build: ./web-frontend
-        ports:
-            - '3000:3000'
-        environment:
-            - VITE_API_URL=${API_URL}
-        depends_on:
-            - backend
-        restart: unless-stopped
+  frontend:
+    build: ./web-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_API_URL=${API_URL}
+    depends_on:
+      - backend
+    restart: unless-stopped
 
-    postgres:
-        image: timescale/timescaledb:latest-pg15
-        ports:
-            - '5432:5432'
-        environment:
-            - POSTGRES_USER=${DB_USER}
-            - POSTGRES_PASSWORD=${DB_PASSWORD}
-            - POSTGRES_DB=${DB_NAME}
-        volumes:
-            - postgres_data:/var/lib/postgresql/data
-        restart: unless-stopped
+  postgres:
+    image: timescale/timescaledb:latest-pg15
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
 
-    redis:
-        image: redis:7-alpine
-        ports:
-            - '6379:6379'
-        command: redis-server --requirepass ${REDIS_PASSWORD}
-        volumes:
-            - redis_data:/data
-        restart: unless-stopped
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
 
 volumes:
-    postgres_data:
-    redis_data:
+  postgres_data:
+  redis_data:
 ```
 
 ## Database Configuration
@@ -498,31 +498,31 @@ sudo ufw enable
 
 ```yaml
 models:
-    liquidity_prediction:
-        type: LSTM
-        input_size: 10
-        hidden_size: 128
-        num_layers: 4
-        dropout: 0.2
-        learning_rate: 0.001
-        batch_size: 32
-        epochs: 100
+  liquidity_prediction:
+    type: LSTM
+    input_size: 10
+    hidden_size: 128
+    num_layers: 4
+    dropout: 0.2
+    learning_rate: 0.001
+    batch_size: 32
+    epochs: 100
 
-    price_forecasting:
-        type: Transformer
-        d_model: 256
-        nhead: 8
-        num_layers: 6
-        dropout: 0.1
-        learning_rate: 0.0001
-        batch_size: 64
-        epochs: 150
+  price_forecasting:
+    type: Transformer
+    d_model: 256
+    nhead: 8
+    num_layers: 6
+    dropout: 0.1
+    learning_rate: 0.0001
+    batch_size: 64
+    epochs: 150
 
 training:
-    device: cuda # cuda or cpu
-    validation_split: 0.2
-    early_stopping_patience: 10
-    checkpoint_interval: 5
+  device: cuda # cuda or cpu
+  validation_split: 0.2
+  early_stopping_patience: 10
+  checkpoint_interval: 5
 ```
 
 ## Monitoring Configuration
@@ -531,26 +531,26 @@ training:
 
 ```yaml
 global:
-    scrape_interval: 15s
-    evaluation_interval: 15s
+  scrape_interval: 15s
+  evaluation_interval: 15s
 
 scrape_configs:
-    - job_name: 'fluxion-backend'
-      static_configs:
-          - targets: ['backend:8000']
+  - job_name: "fluxion-backend"
+    static_configs:
+      - targets: ["backend:8000"]
 
-    - job_name: 'fluxion-postgres'
-      static_configs:
-          - targets: ['postgres-exporter:9187']
+  - job_name: "fluxion-postgres"
+    static_configs:
+      - targets: ["postgres-exporter:9187"]
 
-    - job_name: 'fluxion-redis'
-      static_configs:
-          - targets: ['redis-exporter:9121']
+  - job_name: "fluxion-redis"
+    static_configs:
+      - targets: ["redis-exporter:9121"]
 
 alerting:
-    alertmanagers:
-        - static_configs:
-              - targets: ['alertmanager:9093']
+  alertmanagers:
+    - static_configs:
+        - targets: ["alertmanager:9093"]
 ```
 
 ### Grafana Configuration
@@ -560,11 +560,11 @@ alerting:
 apiVersion: 1
 
 datasources:
-    - name: Prometheus
-      type: prometheus
-      access: proxy
-      url: http://prometheus:9090
-      isDefault: true
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
 ```
 
 ## Environment-Specific Settings

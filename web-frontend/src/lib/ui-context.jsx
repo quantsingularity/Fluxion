@@ -1,113 +1,113 @@
-import React from 'react';
-import { createContext, useContext, useState } from 'react';
+import React from "react";
+import { createContext, useContext, useState } from "react";
 
 // Create context
 const UIContext = createContext(null);
 
 // Provider
 export const UIProvider = ({ children }) => {
-    const [darkMode, setDarkMode] = useState(true);
-    const [sidebarOpen, setSidebarOpen] = useState(true);
-    const [notifications, setNotifications] = useState([]);
-    const [loading, setLoading] = useState({});
-    const [errors, setErrors] = useState({});
+  const [darkMode, setDarkMode] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState({});
+  const [errors, setErrors] = useState({});
 
-    // Toggle dark mode
-    const toggleDarkMode = () => {
-        setDarkMode(!darkMode);
+  // Toggle dark mode
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode);
+  };
+
+  // Toggle sidebar
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
+  // Add notification
+  const addNotification = (notification) => {
+    const id = Date.now();
+    const newNotification = {
+      id,
+      ...notification,
+      timestamp: new Date(),
     };
 
-    // Toggle sidebar
-    const toggleSidebar = () => {
-        setSidebarOpen(!sidebarOpen);
-    };
+    setNotifications([newNotification, ...notifications]);
 
-    // Add notification
-    const addNotification = (notification) => {
-        const id = Date.now();
-        const newNotification = {
-            id,
-            ...notification,
-            timestamp: new Date(),
-        };
+    // Auto dismiss after timeout if not persistent
+    if (!notification.persistent) {
+      setTimeout(() => {
+        dismissNotification(id);
+      }, notification.duration || 5000);
+    }
 
-        setNotifications([newNotification, ...notifications]);
+    return id;
+  };
 
-        // Auto dismiss after timeout if not persistent
-        if (!notification.persistent) {
-            setTimeout(() => {
-                dismissNotification(id);
-            }, notification.duration || 5000);
-        }
+  // Dismiss notification
+  const dismissNotification = (id) => {
+    setNotifications(notifications.filter((n) => n.id !== id));
+  };
 
-        return id;
-    };
+  // Set loading state
+  const setLoadingState = (key, isLoading) => {
+    setLoading((prev) => ({
+      ...prev,
+      [key]: isLoading,
+    }));
+  };
 
-    // Dismiss notification
-    const dismissNotification = (id) => {
-        setNotifications(notifications.filter((n) => n.id !== id));
-    };
+  // Set error state
+  const setErrorState = (key, error) => {
+    setErrors((prev) => ({
+      ...prev,
+      [key]: error,
+    }));
 
-    // Set loading state
-    const setLoadingState = (key, isLoading) => {
-        setLoading((prev) => ({
-            ...prev,
-            [key]: isLoading,
-        }));
-    };
+    if (error) {
+      addNotification({
+        title: "Error",
+        message: error,
+        type: "error",
+        duration: 8000,
+      });
+    }
+  };
 
-    // Set error state
-    const setErrorState = (key, error) => {
-        setErrors((prev) => ({
-            ...prev,
-            [key]: error,
-        }));
+  // Clear error state
+  const clearErrorState = (key) => {
+    setErrors((prev) => {
+      const newErrors = { ...prev };
+      delete newErrors[key];
+      return newErrors;
+    });
+  };
 
-        if (error) {
-            addNotification({
-                title: 'Error',
-                message: error,
-                type: 'error',
-                duration: 8000,
-            });
-        }
-    };
+  // Context value
+  const value = {
+    darkMode,
+    toggleDarkMode,
+    sidebarOpen,
+    toggleSidebar,
+    notifications,
+    addNotification,
+    dismissNotification,
+    loading,
+    setLoadingState,
+    errors,
+    setErrorState,
+    clearErrorState,
+  };
 
-    // Clear error state
-    const clearErrorState = (key) => {
-        setErrors((prev) => {
-            const newErrors = { ...prev };
-            delete newErrors[key];
-            return newErrors;
-        });
-    };
-
-    // Context value
-    const value = {
-        darkMode,
-        toggleDarkMode,
-        sidebarOpen,
-        toggleSidebar,
-        notifications,
-        addNotification,
-        dismissNotification,
-        loading,
-        setLoadingState,
-        errors,
-        setErrorState,
-        clearErrorState,
-    };
-
-    return <UIContext.Provider value={value}>{children}</UIContext.Provider>;
+  return <UIContext.Provider value={value}>{children}</UIContext.Provider>;
 };
 
 // Custom hook to use the UI context
 export const useUI = () => {
-    const context = useContext(UIContext);
-    if (!context) {
-        throw new Error('useUI must be used within a UIProvider');
-    }
-    return context;
+  const context = useContext(UIContext);
+  if (!context) {
+    throw new Error("useUI must be used within a UIProvider");
+  }
+  return context;
 };
 
 export default useUI;

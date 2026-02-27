@@ -22,39 +22,43 @@ Liquidity providers (LPs) earn fees by depositing assets into liquidity pools. T
 ### Using ethers.js
 
 ```javascript
-const { ethers } = require('ethers');
+const { ethers } = require("ethers");
 
 // Contract ABIs
-const LiquidityPoolManagerABI = require('./abis/LiquidityPoolManager.json');
+const LiquidityPoolManagerABI = require("./abis/LiquidityPoolManager.json");
 
 // Configuration
-const POOL_MANAGER_ADDRESS = '0x...'; // Deployed contract address
-const RPC_URL = 'http://localhost:8545'; // Or testnet/mainnet
+const POOL_MANAGER_ADDRESS = "0x..."; // Deployed contract address
+const RPC_URL = "http://localhost:8545"; // Or testnet/mainnet
 
 async function main() {
-    // Connect to provider
-    const provider = new ethers.JsonRpcProvider(RPC_URL);
-    const signer = await provider.getSigner();
+  // Connect to provider
+  const provider = new ethers.JsonRpcProvider(RPC_URL);
+  const signer = await provider.getSigner();
 
-    // Connect to contract
-    const poolManager = new ethers.Contract(POOL_MANAGER_ADDRESS, LiquidityPoolManagerABI, signer);
+  // Connect to contract
+  const poolManager = new ethers.Contract(
+    POOL_MANAGER_ADDRESS,
+    LiquidityPoolManagerABI,
+    signer,
+  );
 
-    console.log('Connected to LiquidityPoolManager at', POOL_MANAGER_ADDRESS);
+  console.log("Connected to LiquidityPoolManager at", POOL_MANAGER_ADDRESS);
 
-    // Add liquidity
-    const poolId = ethers.id('ETH-USDC-POOL');
-    const ethAmount = ethers.parseEther('1.0'); // 1 ETH
-    const usdcAmount = ethers.parseUnits('3000', 6); // 3000 USDC (6 decimals)
+  // Add liquidity
+  const poolId = ethers.id("ETH-USDC-POOL");
+  const ethAmount = ethers.parseEther("1.0"); // 1 ETH
+  const usdcAmount = ethers.parseUnits("3000", 6); // 3000 USDC (6 decimals)
 
-    const tx = await poolManager.addLiquidity(
-        poolId,
-        [ethAmount, usdcAmount],
-        { value: ethAmount }, // Send ETH with transaction
-    );
+  const tx = await poolManager.addLiquidity(
+    poolId,
+    [ethAmount, usdcAmount],
+    { value: ethAmount }, // Send ETH with transaction
+  );
 
-    console.log('Transaction hash:', tx.hash);
-    const receipt = await tx.wait();
-    console.log('Liquidity added! Block:', receipt.blockNumber);
+  console.log("Transaction hash:", tx.hash);
+  const receipt = await tx.wait();
+  console.log("Liquidity added! Block:", receipt.blockNumber);
 }
 
 main().catch(console.error);

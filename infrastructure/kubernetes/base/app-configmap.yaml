@@ -2,13 +2,13 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-    name: fluxion-config
+  name: fluxion-config
 data:
-    API_URL: http://app-backend
-    REDIS_HOST: fluxion-redis
-    REDIS_PORT: '6379'
-    DATABASE_HOST: fluxion-database
-    DATABASE_PORT: '3306'
-    DATABASE_NAME: fluxiondb
-    DATABASE_USER: appuser
-    LOG_LEVEL: debug
+  API_URL: http://app-backend
+  REDIS_HOST: fluxion-redis
+  REDIS_PORT: "6379"
+  DATABASE_HOST: fluxion-database
+  DATABASE_PORT: "3306"
+  DATABASE_NAME: fluxiondb
+  DATABASE_USER: appuser
+  LOG_LEVEL: debug

@@ -193,37 +193,40 @@ for pred in predictions.predictions:
 ### JavaScript SDK (ethers.js)
 
 ```javascript
-const { ethers } = require('ethers');
-const FluxionABI = require('./abis/SyntheticAssetFactory.json');
+const { ethers } = require("ethers");
+const FluxionABI = require("./abis/SyntheticAssetFactory.json");
 
 // Connect to provider
-const provider = new ethers.JsonRpcProvider('http://localhost:8545');
+const provider = new ethers.JsonRpcProvider("http://localhost:8545");
 const signer = await provider.getSigner();
 
 // Connect to contract
-const factoryAddress = '0x...';
+const factoryAddress = "0x...";
 const factory = new ethers.Contract(factoryAddress, FluxionABI, signer);
 
 // Create synthetic asset
 const tx = await factory.createSynthetic(
-    ethers.id('BTC-USD'), // Asset ID
-    '0x....', // Oracle address
-    ethers.id('job-id'), // Chainlink job ID
-    ethers.parseEther('0.1'), // Fee
+  ethers.id("BTC-USD"), // Asset ID
+  "0x....", // Oracle address
+  ethers.id("job-id"), // Chainlink job ID
+  ethers.parseEther("0.1"), // Fee
 );
 await tx.wait();
-console.log('Synthetic asset created:', tx.hash);
+console.log("Synthetic asset created:", tx.hash);
 
 // Mint synthetic tokens
-const mintTx = await factory.mintSynthetic(ethers.id('BTC-USD'), ethers.parseEther('10'));
+const mintTx = await factory.mintSynthetic(
+  ethers.id("BTC-USD"),
+  ethers.parseEther("10"),
+);
 await mintTx.wait();
-console.log('Minted 10 sBTC tokens');
+console.log("Minted 10 sBTC tokens");
 
 // Get asset details
-const asset = await factory.syntheticAssets(ethers.id('BTC-USD'));
-console.log('Token address:', asset.token);
-console.log('Oracle:', asset.oracle);
-console.log('Active:', asset.active);
+const asset = await factory.syntheticAssets(ethers.id("BTC-USD"));
+console.log("Token address:", asset.token);
+console.log("Oracle:", asset.oracle);
+console.log("Active:", asset.active);
 ```
 
 ## Common Workflows
@@ -315,10 +318,12 @@ EOF
 ### Workflow 4: Privacy-Preserving Trade (zkEVM)
 
 ```javascript
-const { ethers } = require('ethers');
+const { ethers } = require("ethers");
 
 // Connect to zkSync network
-const zkProvider = new ethers.JsonRpcProvider('https://zksync2-testnet.zksync.dev');
+const zkProvider = new ethers.JsonRpcProvider(
+  "https://zksync2-testnet.zksync.dev",
+);
 const zkSigner = new ethers.Wallet(PRIVATE_KEY, zkProvider);
 
 // Execute private trade
@@ -326,13 +331,13 @@ const syntheticAsset = new ethers.Contract(ASSET_ADDRESS, ABI, zkSigner);
 
 // Trade is batched and settled privately
 const tx = await syntheticAsset.trade(
-    ethers.parseEther('1.0'), // Amount
-    ethers.parseEther('50000'), // Price limit
-    { gasLimit: 1000000 },
+  ethers.parseEther("1.0"), // Amount
+  ethers.parseEther("50000"), // Price limit
+  { gasLimit: 1000000 },
 );
 
 await tx.wait();
-console.log('Private trade executed:', tx.hash);
+console.log("Private trade executed:", tx.hash);
 // Trade details remain confidential on zkEVM
 ```
 
@@ -354,12 +359,12 @@ Access the web dashboard at `http://localhost:3000`:
 ```javascript
 // MetaMask connection
 async function connectWallet() {
-    if (window.ethereum) {
-        const accounts = await window.ethereum.request({
-            method: 'eth_requestAccounts',
-        });
-        console.log('Connected:', accounts[0]);
-    }
+  if (window.ethereum) {
+    const accounts = await window.ethereum.request({
+      method: "eth_requestAccounts",
+    });
+    console.log("Connected:", accounts[0]);
+  }
 }
 ```
 

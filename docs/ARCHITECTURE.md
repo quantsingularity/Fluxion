@@ -579,8 +579,8 @@ Used for real-time updates via WebSocket.
 
 ```javascript
 // Frontend subscribes to price updates
-websocket.on('price_update', (data) => {
-    updatePriceDisplay(data);
+websocket.on("price_update", (data) => {
+  updatePriceDisplay(data);
 });
 ```
 
@@ -614,24 +614,24 @@ class LimitOrderStrategy(OrderExecutionStrategy): ...
 ### Performance Optimizations
 
 1. **Database**:
-    - TimescaleDB for time-series data
-    - Connection pooling (20 connections default)
-    - Query optimization with indexes
+   - TimescaleDB for time-series data
+   - Connection pooling (20 connections default)
+   - Query optimization with indexes
 
 2. **Caching**:
-    - Redis for session data
-    - API response caching (short TTL)
-    - ML prediction caching (1-hour TTL)
+   - Redis for session data
+   - API response caching (short TTL)
+   - ML prediction caching (1-hour TTL)
 
 3. **Blockchain**:
-    - Batch transactions where possible
-    - Gas optimization in contracts
-    - Use of zkEVM for privacy and scaling
+   - Batch transactions where possible
+   - Gas optimization in contracts
+   - Use of zkEVM for privacy and scaling
 
 4. **API**:
-    - Rate limiting prevents abuse
-    - Async/await for I/O operations
-    - Pagination for list endpoints
+   - Rate limiting prevents abuse
+   - Async/await for I/O operations
+   - Pagination for list endpoints
 
 ### Monitoring Points
 

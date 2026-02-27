@@ -214,8 +214,8 @@ npm run format
 **Code Example:**
 
 ```javascript
-import { useState, useEffect } from 'react';
-import { ethers } from 'ethers';
+import { useState, useEffect } from "react";
+import { ethers } from "ethers";
 
 /**
  * Custom hook for interacting with Fluxion contracts
@@ -224,27 +224,31 @@ import { ethers } from 'ethers';
  * @returns {Object} Contract instance and loading state
  */
 export const useFluxionContract = (contractAddress, abi) => {
-    const [contract, setContract] = useState(null);
-    const [loading, setLoading] = useState(true);
+  const [contract, setContract] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const initContract = async () => {
-            try {
-                const provider = new ethers.BrowserProvider(window.ethereum);
-                const signer = await provider.getSigner();
-                const contractInstance = new ethers.Contract(contractAddress, abi, signer);
-                setContract(contractInstance);
-            } catch (error) {
-                console.error('Failed to initialize contract:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
+  useEffect(() => {
+    const initContract = async () => {
+      try {
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const signer = await provider.getSigner();
+        const contractInstance = new ethers.Contract(
+          contractAddress,
+          abi,
+          signer,
+        );
+        setContract(contractInstance);
+      } catch (error) {
+        console.error("Failed to initialize contract:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-        initContract();
-    }, [contractAddress, abi]);
+    initContract();
+  }, [contractAddress, abi]);
 
-    return { contract, loading };
+  return { contract, loading };
 };
 ```
 
@@ -395,25 +399,25 @@ npm test -- --watch
 **Test Example:**
 
 ```javascript
-import { render, screen, fireEvent } from '@testing-library/react';
-import { OrderForm } from './OrderForm';
+import { render, screen, fireEvent } from "@testing-library/react";
+import { OrderForm } from "./OrderForm";
 
-describe('OrderForm', () => {
-    it('submits order with correct data', async () => {
-        const mockSubmit = jest.fn();
-        render(<OrderForm onSubmit={mockSubmit} />);
+describe("OrderForm", () => {
+  it("submits order with correct data", async () => {
+    const mockSubmit = jest.fn();
+    render(<OrderForm onSubmit={mockSubmit} />);
 
-        fireEvent.change(screen.getByLabelText(/amount/i), {
-            target: { value: '1.5' },
-        });
-
-        fireEvent.click(screen.getByRole('button', { name: /place order/i }));
-
-        expect(mockSubmit).toHaveBeenCalledWith({
-            amount: '1.5',
-            // ...
-        });
+    fireEvent.change(screen.getByLabelText(/amount/i), {
+      target: { value: "1.5" },
     });
+
+    fireEvent.click(screen.getByRole("button", { name: /place order/i }));
+
+    expect(mockSubmit).toHaveBeenCalledWith({
+      amount: "1.5",
+      // ...
+    });
+  });
 });
 ```
 
