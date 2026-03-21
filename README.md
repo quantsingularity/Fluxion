@@ -4,7 +4,7 @@
 [![Test Coverage](https://img.shields.io/badge/coverage-83%25-brightgreen)](https://github.com/quantsingularity/Fluxion/actions)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-## ⚡ Synthetic Asset Liquidity Engine
+## Synthetic Asset Liquidity Engine
 
 Fluxion is a cutting-edge synthetic asset liquidity engine that leverages zero-knowledge proofs and cross-chain technology to provide efficient, secure, and scalable liquidity for synthetic assets across multiple blockchain networks.
 
@@ -16,7 +16,7 @@ Fluxion is a cutting-edge synthetic asset liquidity engine that leverages zero-k
 
 ---
 
-## 📚 Table of Contents
+## Table of Contents
 
 | Section                                 | Description                                                             |
 | :-------------------------------------- | :---------------------------------------------------------------------- |
