@@ -1,23 +1,16 @@
-import React, { useState } from "react";
-import {
-  View,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Platform,
-} from "react-native";
-import {
-  TextInput,
-  Button,
-  HelperText,
-  useTheme,
-  Card,
-  Text,
-  Chip,
-  IconButton,
-} from "react-native-paper";
-import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { format } from "date-fns"; // Using date-fns for reliable formatting
+import { useState } from "react";
+import { ScrollView, StyleSheet, View } from "react-native";
+import DateTimePickerModal from "react-native-modal-datetime-picker";
+import {
+  Button,
+  Card,
+  Chip,
+  HelperText,
+  Text,
+  TextInput,
+  useTheme,
+} from "react-native-paper";
 
 const PredictionForm = ({ onSubmit, isLoading }) => {
   const [selectedTimestamps, setSelectedTimestamps] = useState([]);
@@ -25,7 +18,7 @@ const PredictionForm = ({ onSubmit, isLoading }) => {
   const [contextFeatures, setContextFeatures] = useState("");
   const [errors, setErrors] = useState({});
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
-  const theme = useTheme();
+  const _theme = useTheme();
 
   const showDatePicker = () => {
     setDatePickerVisibility(true);
@@ -61,7 +54,7 @@ const PredictionForm = ({ onSubmit, isLoading }) => {
     } else {
       try {
         JSON.parse(contextFeatures);
-      } catch (e) {
+      } catch (_e) {
         newErrors.contextFeatures = "Context Features must be valid JSON.";
       }
     }

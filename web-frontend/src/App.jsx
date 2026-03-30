@@ -1,19 +1,11 @@
-import React from "react";
-import {
-  Box,
-  Flex,
-  Container,
-  Grid,
-  GridItem,
-  useColorModeValue,
-} from "@chakra-ui/react";
+import { Box, Container, Flex, useColorModeValue } from "@chakra-ui/react";
+import { Route, Routes } from "react-router-dom";
 import Navbar from "./components/layout/Navbar";
 import Sidebar from "./components/layout/Sidebar";
-import { Routes, Route } from "react-router-dom";
-import Dashboard from "./pages/dashboard/Dashboard";
-import Pools from "./pages/pools/Pools";
-import CreatePool from "./pages/pools/CreatePool";
 import Analytics from "./pages/analytics/Analytics";
+import Dashboard from "./pages/dashboard/Dashboard";
+import CreatePool from "./pages/pools/CreatePool";
+import Pools from "./pages/pools/Pools";
 import Settings from "./pages/settings/Settings";
 import Synthetics from "./pages/synthetics/Synthetics";
 

@@ -1,23 +1,23 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
-  View,
-  StyleSheet,
   FlatList,
   RefreshControl,
+  StyleSheet,
   TouchableOpacity,
+  View,
 } from "react-native";
 import {
-  Text,
-  Card,
-  Title,
-  Paragraph,
-  useTheme,
-  Searchbar,
-  Chip,
   ActivityIndicator,
-  Snackbar,
+  Card,
+  Chip,
   IconButton,
+  Paragraph,
   ProgressBar,
+  Searchbar,
+  Snackbar,
+  Text,
+  Title,
+  useTheme,
 } from "react-native-paper";
 import { fetchPools } from "../api/client";
 import { formatCurrency } from "../utils/formatters";
@@ -41,7 +41,7 @@ const PoolsScreen = ({ navigation }) => {
     }, 30000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [loadPools]);
 
   // Load pools from API
   const loadPools = async (silent = false) => {
@@ -78,7 +78,7 @@ const PoolsScreen = ({ navigation }) => {
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     loadPools();
-  }, []);
+  }, [loadPools]);
 
   // Search handler
   const onChangeSearch = (query) => {
@@ -88,7 +88,7 @@ const PoolsScreen = ({ navigation }) => {
   // Filter and sort pools
   const getFilteredAndSortedPools = () => {
     // Filter by search
-    let filtered = pools.filter((pool) => {
+    const filtered = pools.filter((pool) => {
       if (!searchQuery) return true;
 
       const searchLower = searchQuery.toLowerCase();

@@ -1,19 +1,17 @@
-import React from "react";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import {
-  Provider as PaperProvider,
   DefaultTheme,
+  Provider as PaperProvider,
   useTheme,
 } from "react-native-paper";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-
+import AssetsScreen from "./src/screens/AssetsScreen";
 // Import Screens
 import InputScreen from "./src/screens/InputScreen";
-import ResultsScreen from "./src/screens/ResultsScreen";
-import AssetsScreen from "./src/screens/AssetsScreen";
 import PoolsScreen from "./src/screens/PoolsScreen";
+import ResultsScreen from "./src/screens/ResultsScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();

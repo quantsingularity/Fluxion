@@ -1,5 +1,5 @@
-import { createContext, useContext, useState, useEffect } from "react";
 import { ethers } from "ethers";
+import { createContext, useContext, useEffect, useState } from "react";
 import { userAPI } from "../services/api";
 
 // ABIs
@@ -142,7 +142,10 @@ export function Web3Provider({ children }) {
         );
       }
     };
-  }, []);
+  }, [
+    handleAccountsChanged, // Initialize contracts
+    initializeContracts,
+  ]);
 
   // Initialize contracts
   const initializeContracts = (provider) => {
@@ -248,7 +251,7 @@ export function Web3Provider({ children }) {
         // Mock data for development
         const mockPools = [
           {
-            id: "pool-" + address.substring(0, 8) + "-1",
+            id: `pool-${address.substring(0, 8)}-1`,
             assets: ["ETH", "USDC"],
             weights: [50, 50],
             fee: 0.3,
@@ -257,7 +260,7 @@ export function Web3Provider({ children }) {
             apy: "4.5%",
           },
           {
-            id: "pool-" + address.substring(0, 8) + "-2",
+            id: `pool-${address.substring(0, 8)}-2`,
             assets: ["ETH", "WBTC"],
             weights: [40, 60],
             fee: 0.25,
@@ -293,7 +296,7 @@ export function Web3Provider({ children }) {
 
       // Mock new pool
       const newPool = {
-        id: "pool-" + account.substring(0, 8) + "-" + (pools.length + 1),
+        id: `pool-${account.substring(0, 8)}-${pools.length + 1}`,
         assets: poolData.assets,
         weights: poolData.weights,
         fee: poolData.fee,

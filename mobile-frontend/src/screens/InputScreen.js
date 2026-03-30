@@ -1,9 +1,9 @@
-import React, { useState } from "react";
-import { View, StyleSheet } from "react-native";
+import { useState } from "react";
+import { StyleSheet, View } from "react-native";
 import { Snackbar, useTheme } from "react-native-paper";
-import PredictionForm from "../components/PredictionForm";
-import LoadingIndicator from "../components/LoadingIndicator";
 import { predictEnergy } from "../api/client";
+import LoadingIndicator from "../components/LoadingIndicator";
+import PredictionForm from "../components/PredictionForm";
 
 const InputScreen = ({ navigation }) => {
   const [isLoading, setIsLoading] = useState(false);

@@ -1,66 +1,52 @@
-import React, { useState } from "react";
 import {
   Box,
-  Flex,
-  Heading,
-  Text,
-  SimpleGrid,
   Button,
-  HStack,
-  VStack,
-  Icon,
-  useColorModeValue,
-  Badge,
-  Tabs,
-  TabList,
-  TabPanels,
-  Tab,
-  TabPanel,
-  Input,
+  Card,
+  CardBody,
+  Flex,
   FormControl,
   FormLabel,
+  Heading,
+  HStack,
+  Icon,
+  NumberDecrementStepper,
+  NumberIncrementStepper,
   NumberInput,
   NumberInputField,
   NumberInputStepper,
-  NumberIncrementStepper,
-  NumberDecrementStepper,
   Select,
+  SimpleGrid,
   Slider,
-  SliderTrack,
   SliderFilledTrack,
   SliderThumb,
+  SliderTrack,
+  Tab,
+  TabList,
+  TabPanel,
+  TabPanels,
+  Tabs,
+  Text,
   Tooltip,
-  Divider,
-  Card,
-  CardBody,
-  Stack,
-  Image,
+  useColorModeValue,
   useToast,
+  VStack,
 } from "@chakra-ui/react";
+import { useState } from "react";
+import { FiAlertTriangle, FiInfo, FiPlus } from "react-icons/fi";
 import {
-  FiTrendingUp,
-  FiDroplet,
-  FiDollarSign,
-  FiActivity,
-  FiPlus,
-  FiInfo,
-  FiCheck,
-  FiAlertTriangle,
-} from "react-icons/fi";
-import { useWeb3 } from "../../lib/web3-config.jsx";
-import {
-  PieChart,
-  Pie,
   Cell,
-  ResponsiveContainer,
+  Pie,
+  PieChart,
   Tooltip as RechartsTooltip,
+  ResponsiveContainer,
 } from "recharts";
+import { useWeb3 } from "../../lib/web3-config.jsx";
 
 const CreatePool = () => {
   const { isConnected } = useWeb3();
   const cardBg = useColorModeValue("gray.800", "gray.700");
   const borderColor = useColorModeValue("gray.700", "gray.600");
-  const textColor = useColorModeValue("white", "white");
+  const _textColor = useColorModeValue("white", "white");
   const subTextColor = useColorModeValue("gray.400", "gray.400");
   const toast = useToast();
 
@@ -540,7 +526,7 @@ const CreatePool = () => {
                             borderRadius: "4px",
                             color: "white",
                           }}
-                          formatter={(value, name, props) => [
+                          formatter={(value, _name, props) => [
                             `${value}%`,
                             props.payload.token,
                           ]}

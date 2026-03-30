@@ -1,17 +1,16 @@
-import React from "react";
 import {
   Box,
-  Flex,
-  Text,
-  Icon,
   CloseButton,
+  Flex,
+  Icon,
+  Text,
   useColorModeValue,
 } from "@chakra-ui/react";
 import {
-  FiCheckCircle,
   FiAlertCircle,
-  FiInfo,
   FiAlertTriangle,
+  FiCheckCircle,
+  FiInfo,
 } from "react-icons/fi";
 import { useUI } from "../../lib/ui-context";
 

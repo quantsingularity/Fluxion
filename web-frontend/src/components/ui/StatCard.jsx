@@ -1,12 +1,10 @@
-import React from "react";
 import {
   Box,
-  Button,
   Flex,
-  Text,
   Icon,
-  useColorModeValue,
+  Text,
   Tooltip,
+  useColorModeValue,
 } from "@chakra-ui/react";
 import { FiInfo } from "react-icons/fi";
 

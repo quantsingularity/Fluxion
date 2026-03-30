@@ -1,8 +1,5 @@
-import React from "react";
 import { render } from "@testing-library/react-native";
 import App from "../../App";
-import { NavigationContainer } from "@react-navigation/native";
-import { Provider as PaperProvider } from "react-native-paper";
 
 // Mock the navigation components
 jest.mock("@react-navigation/native", () => ({

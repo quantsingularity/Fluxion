@@ -1,74 +1,69 @@
-import React, { useState } from "react";
 import {
-  Box,
-  Flex,
-  Heading,
-  Text,
-  SimpleGrid,
-  Button,
-  HStack,
-  VStack,
-  Icon,
-  useColorModeValue,
   Badge,
-  Tabs,
-  TabList,
-  TabPanels,
-  Tab,
-  TabPanel,
-  Stat,
-  StatLabel,
-  StatNumber,
-  StatHelpText,
-  StatArrow,
+  Box,
+  Button,
   Card,
   CardBody,
   Divider,
-  Tooltip,
-  useDisclosure,
+  Flex,
+  Heading,
+  HStack,
+  Icon,
   Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalFooter,
   ModalBody,
   ModalCloseButton,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  ModalOverlay,
+  SimpleGrid,
+  Stat,
+  StatArrow,
+  StatHelpText,
+  StatLabel,
+  StatNumber,
+  Tab,
+  TabList,
   Table,
-  Thead,
+  TabPanel,
+  TabPanels,
+  Tabs,
   Tbody,
-  Tr,
-  Th,
   Td,
-  Progress,
+  Text,
+  Th,
+  Thead,
+  Tooltip,
+  Tr,
+  useColorModeValue,
+  useDisclosure,
 } from "@chakra-ui/react";
+import { useState } from "react";
 import {
-  FiTrendingUp,
-  FiTrendingDown,
-  FiBarChart2,
   FiActivity,
+  FiBarChart2,
   FiDollarSign,
-  FiInfo,
-  FiExternalLink,
   FiDownload,
+  FiExternalLink,
   FiShare2,
+  FiTrendingDown,
+  FiTrendingUp,
 } from "react-icons/fi";
 import { Link as RouterLink } from "react-router-dom";
 import {
-  LineChart,
-  Line,
-  AreaChart,
   Area,
-  BarChart,
+  AreaChart,
   Bar,
-  PieChart,
-  Pie,
+  BarChart,
+  CartesianGrid,
   Cell,
+  Legend,
+  Pie,
+  PieChart,
+  Tooltip as RechartsTooltip,
+  ResponsiveContainer,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip as RechartsTooltip,
-  Legend,
-  ResponsiveContainer,
 } from "recharts";
 
 // Mock data for charts
@@ -134,7 +129,7 @@ const topPools = [
 const Analytics = () => {
   const cardBg = useColorModeValue("gray.800", "gray.700");
   const borderColor = useColorModeValue("gray.700", "gray.600");
-  const textColor = useColorModeValue("white", "white");
+  const _textColor = useColorModeValue("white", "white");
   const subTextColor = useColorModeValue("gray.400", "gray.400");
 
   // State for chart modal
@@ -516,7 +511,7 @@ const Analytics = () => {
                           `${name} ${(percent * 100).toFixed(0)}%`
                         }
                       >
-                        {poolTypeData.map((entry, index) => (
+                        {poolTypeData.map((_entry, index) => (
                           <Cell
                             key={`cell-${index}`}
                             fill={COLORS[index % COLORS.length]}
@@ -768,7 +763,7 @@ const Analytics = () => {
                         `${name} ${(percent * 100).toFixed(0)}%`
                       }
                     >
-                      {poolTypeData.map((entry, index) => (
+                      {poolTypeData.map((_entry, index) => (
                         <Cell
                           key={`cell-${index}`}
                           fill={COLORS[index % COLORS.length]}

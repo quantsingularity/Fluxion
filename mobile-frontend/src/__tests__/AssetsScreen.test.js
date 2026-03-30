@@ -5,10 +5,9 @@ jest.mock("../api/client", () => ({
   predictEnergy: jest.fn(),
 }));
 
-import React from "react";
-import { render, waitFor, fireEvent } from "@testing-library/react-native";
-import AssetsScreen from "../screens/AssetsScreen";
+import { fireEvent, render, waitFor } from "@testing-library/react-native";
 import { fetchAssets } from "../api/client";
+import AssetsScreen from "../screens/AssetsScreen";
 
 // Mock the API client
 jest.mock("../api/client");

@@ -1,5 +1,3 @@
-// web-frontend/src/components/analytics/HeatmapChart.js
-import React from "react";
 import { HeatMapGrid } from "react-grid-heatmap";
 
 // Helper function to transform data for the heatmap

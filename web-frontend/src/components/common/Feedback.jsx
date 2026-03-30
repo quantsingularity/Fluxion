@@ -1,14 +1,14 @@
-import React from "react";
 import {
-  Box,
-  Flex,
-  Text,
-  Spinner,
   Alert,
+  AlertDescription,
   AlertIcon,
   AlertTitle,
-  AlertDescription,
+  Box,
+  Flex,
+  Spinner,
+  Text,
 } from "@chakra-ui/react";
+import React from "react";
 
 const LoadingOverlay = ({ message = "Loading..." }) => {
   return (
@@ -117,5 +117,5 @@ const NotificationCenter = ({ notifications }) => {
   );
 };
 
-export { LoadingOverlay, ErrorBoundary, NotificationCenter };
+export { ErrorBoundary, LoadingOverlay, NotificationCenter };
 export default { LoadingOverlay, ErrorBoundary, NotificationCenter };

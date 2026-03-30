@@ -1,5 +1,5 @@
 // web-frontend/src/components/pools/AssetSelector.js
-import React, { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 // Mock API call for fetching assets - replace with actual API call
 const fetchAvailableAssets = async () => {

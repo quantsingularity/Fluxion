@@ -1,5 +1,5 @@
+import { Box, Button, Text, VStack } from "@chakra-ui/react";
 import React from "react";
-import { Box, Text, Button, VStack } from "@chakra-ui/react";
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -7,7 +7,7 @@ class ErrorBoundary extends React.Component {
     this.state = { hasError: false, error: null, errorInfo: null };
   }
 
-  static getDerivedStateFromError(error) {
+  static getDerivedStateFromError(_error) {
     return { hasError: true };
   }
 
@@ -26,9 +26,7 @@ class ErrorBoundary extends React.Component {
             <Text fontSize="xl" fontWeight="bold" color="red.500">
               Something went wrong
             </Text>
-            <Text color="gray.600">
-              {this.state.error && this.state.error.toString()}
-            </Text>
+            <Text color="gray.600">{this.state.error?.toString()}</Text>
             <Button colorScheme="red" onClick={() => window.location.reload()}>
               Reload Page
             </Button>

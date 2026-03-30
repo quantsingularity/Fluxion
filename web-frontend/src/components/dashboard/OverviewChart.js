@@ -1,6 +1,3 @@
-// web-frontend/src/components/dashboard/OverviewChart.js
-import React from "react";
-
 // This is a placeholder for a more complex chart.
 // You would typically use a charting library like Chart.js, Recharts, or Nivo here.
 

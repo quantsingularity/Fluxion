@@ -1,5 +1,5 @@
 // web-frontend/src/components/settings/UserProfile.js
-import React, { useState } from "react";
+import { useState } from "react";
 
 const UserProfile = ({ user, onUpdate }) => {
   const [name, setName] = useState(user ? user.name : "");

@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { marketAPI, poolsAPI, analyticsAPI } from "../services/api";
+import { createContext, useContext, useEffect, useState } from "react";
+import { analyticsAPI, marketAPI, poolsAPI } from "../services/api";
 
 // Create Data Context
 const DataContext = createContext(null);
@@ -190,7 +190,7 @@ export const DataProvider = ({ children }) => {
     fetchMarketData();
     fetchPoolsData();
     fetchAnalyticsData();
-  }, []);
+  }, [fetchAnalyticsData, fetchMarketData, fetchPoolsData]);
 
   // Context value
   const value = {

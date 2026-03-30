@@ -1,5 +1,5 @@
 // web-frontend/src/components/pools/WeightEditor.js
-import React, { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 const WeightEditor = ({
   weights: initialWeights,
@@ -26,7 +26,7 @@ const WeightEditor = ({
   const handleWeightChange = (index, value) => {
     const newWeights = [...weights];
     const parsedValue = parseFloat(value);
-    newWeights[index] = isNaN(parsedValue) ? 0 : parsedValue;
+    newWeights[index] = Number.isNaN(parsedValue) ? 0 : parsedValue;
     setWeights(newWeights);
     validateAndPropagate(newWeights);
   };

@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
 import { ethers } from "ethers";
+import { useEffect, useState } from "react";
 
 export const useWeb3 = () => {
   const [provider, setProvider] = useState(null);

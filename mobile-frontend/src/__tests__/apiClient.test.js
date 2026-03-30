@@ -13,9 +13,8 @@ jest.mock("expo-constants", () => ({
   },
 }));
 
-import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { setAuthToken, getAuthToken, clearAuthToken } from "../api/client";
+import { clearAuthToken, getAuthToken, setAuthToken } from "../api/client";
 
 describe("API Client - Token Management", () => {
   beforeEach(() => {

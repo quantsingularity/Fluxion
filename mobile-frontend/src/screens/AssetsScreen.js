@@ -1,22 +1,22 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
-  View,
-  StyleSheet,
   FlatList,
   RefreshControl,
+  StyleSheet,
   TouchableOpacity,
+  View,
 } from "react-native";
 import {
-  Text,
-  Card,
-  Title,
-  Paragraph,
-  useTheme,
-  Searchbar,
-  Chip,
   ActivityIndicator,
-  Snackbar,
+  Card,
+  Chip,
   IconButton,
+  Paragraph,
+  Searchbar,
+  Snackbar,
+  Text,
+  Title,
+  useTheme,
 } from "react-native-paper";
 import { fetchAssets } from "../api/client";
 import { formatCurrency } from "../utils/formatters";
@@ -40,7 +40,7 @@ const AssetsScreen = ({ navigation }) => {
     }, 30000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [loadAssets]);
 
   // Load assets from API
   const loadAssets = async (silent = false) => {
@@ -77,7 +77,7 @@ const AssetsScreen = ({ navigation }) => {
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     loadAssets();
-  }, []);
+  }, [loadAssets]);
 
   // Search handler
   const onChangeSearch = (query) => {
@@ -130,7 +130,7 @@ const AssetsScreen = ({ navigation }) => {
                   icon={isPositive ? "trending-up" : "trending-down"}
                   style={[
                     styles.changeChip,
-                    { backgroundColor: changeColor + "20" },
+                    { backgroundColor: `${changeColor}20` },
                   ]}
                   textStyle={[styles.changeText, { color: changeColor }]}
                 >

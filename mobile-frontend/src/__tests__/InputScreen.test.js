@@ -1,8 +1,7 @@
-import React from "react";
-import { render, fireEvent, waitFor } from "@testing-library/react-native";
-import InputScreen from "../screens/InputScreen";
 import { NavigationContainer } from "@react-navigation/native";
+import { fireEvent, render, waitFor } from "@testing-library/react-native";
 import { Provider as PaperProvider } from "react-native-paper";
+import InputScreen from "../screens/InputScreen";
 
 // Mock the navigation
 const mockNavigation = {

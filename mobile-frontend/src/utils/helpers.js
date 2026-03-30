@@ -26,7 +26,7 @@ export const shortenAddress = (address, chars = 4) => {
  * @returns {string} Formatted number
  */
 export const formatNumber = (value, decimals = 2) => {
-  if (value === null || value === undefined || isNaN(value)) return "0";
+  if (value === null || value === undefined || Number.isNaN(value)) return "0";
   return Number(value).toLocaleString("en-US", {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
@@ -40,7 +40,7 @@ export const formatNumber = (value, decimals = 2) => {
  * @returns {string} Formatted number with suffix
  */
 export const formatCompactNumber = (value, decimals = 2) => {
-  if (value === null || value === undefined || isNaN(value)) return "0";
+  if (value === null || value === undefined || Number.isNaN(value)) return "0";
 
   const suffixes = ["", "K", "M", "B", "T"];
   const tier = Math.floor(Math.log10(Math.abs(value)) / 3);
@@ -48,7 +48,7 @@ export const formatCompactNumber = (value, decimals = 2) => {
   if (tier === 0) return formatNumber(value, decimals);
 
   const suffix = suffixes[tier];
-  const scale = Math.pow(10, tier * 3);
+  const scale = 10 ** (tier * 3);
   const scaled = value / scale;
 
   return `${scaled.toFixed(decimals)}${suffix}`;
@@ -61,7 +61,7 @@ export const formatCompactNumber = (value, decimals = 2) => {
  * @returns {string} Formatted percentage
  */
 export const formatPercentage = (value, decimals = 2) => {
-  if (value === null || value === undefined || isNaN(value)) return "0%";
+  if (value === null || value === undefined || Number.isNaN(value)) return "0%";
   return `${(value * 100).toFixed(decimals)}%`;
 };
 
@@ -102,7 +102,7 @@ export const isValidJSON = (str) => {
   try {
     JSON.parse(str);
     return true;
-  } catch (e) {
+  } catch (_e) {
     return false;
   }
 };
@@ -151,7 +151,7 @@ export const throttle = (func, limit = 300) => {
 export const safeJSONParse = (str, fallback = null) => {
   try {
     return JSON.parse(str);
-  } catch (e) {
+  } catch (_e) {
     return fallback;
   }
 };

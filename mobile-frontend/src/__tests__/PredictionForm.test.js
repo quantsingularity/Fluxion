@@ -1,7 +1,6 @@
-import React from "react";
-import { render, fireEvent, waitFor } from "@testing-library/react-native";
-import PredictionForm from "../components/PredictionForm";
+import { fireEvent, render, waitFor } from "@testing-library/react-native";
 import { Provider as PaperProvider } from "react-native-paper";
+import PredictionForm from "../components/PredictionForm";
 
 // Mock the date-fns format function
 jest.mock("date-fns", () => ({

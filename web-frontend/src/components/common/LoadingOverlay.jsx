@@ -1,4 +1,3 @@
-import React from "react";
 import { Box, Spinner, Text, VStack } from "@chakra-ui/react";
 
 const LoadingOverlay = ({ message = "Loading..." }) => {

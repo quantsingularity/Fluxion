@@ -1,7 +1,6 @@
-import React from "react";
 import { render } from "@testing-library/react-native";
-import ResultsDisplay from "../components/ResultsDisplay";
 import { Provider as PaperProvider } from "react-native-paper";
+import ResultsDisplay from "../components/ResultsDisplay";
 
 describe("ResultsDisplay", () => {
   const mockResults = {

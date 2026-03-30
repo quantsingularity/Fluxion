@@ -1,5 +1,4 @@
-import React from "react";
-import { Box, Flex, Text, Icon, Spinner } from "@chakra-ui/react";
+import { Flex, Spinner, Text } from "@chakra-ui/react";
 
 const LoadingOverlay = ({ message = "Loading..." }) => {
   return (

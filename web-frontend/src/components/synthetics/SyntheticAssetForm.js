@@ -1,5 +1,5 @@
 // web-frontend/src/components/synthetics/SyntheticAssetForm.js
-import React, { useState } from "react";
+import { useState } from "react";
 
 const SyntheticAssetForm = ({ onSubmit }) => {
   const [assetName, setAssetName] = useState("");

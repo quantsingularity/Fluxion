@@ -5,10 +5,9 @@ jest.mock("../api/client", () => ({
   predictEnergy: jest.fn(),
 }));
 
-import React from "react";
-import { render, waitFor, fireEvent } from "@testing-library/react-native";
-import PoolsScreen from "../screens/PoolsScreen";
+import { fireEvent, render, waitFor } from "@testing-library/react-native";
 import { fetchPools } from "../api/client";
+import PoolsScreen from "../screens/PoolsScreen";
 
 // Mock the API client
 jest.mock("../api/client");
@@ -106,7 +105,7 @@ describe("PoolsScreen", () => {
     });
 
     // Default sort is by TVL, so synBTC/synUSD (higher TVL) should come first
-    const poolNames = getAllByText(/syn[A-Z]+\/syn[A-Z]+/);
+    const _poolNames = getAllByText(/syn[A-Z]+\/syn[A-Z]+/);
     // First pool should be synBTC/synUSD (TVL: 10.5M)
     // Second pool should be synETH/synUSD (TVL: 8.2M)
   });

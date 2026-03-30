@@ -1,6 +1,5 @@
-import React from "react";
-import { StyleSheet, ScrollView, View } from "react-native";
-import { Card, Text, Title, Paragraph, useTheme } from "react-native-paper";
+import { ScrollView, StyleSheet, View } from "react-native";
+import { Card, Paragraph, Text, Title, useTheme } from "react-native-paper";
 
 const ResultsDisplay = ({ results }) => {
   const theme = useTheme();
@@ -64,20 +63,18 @@ const ResultsDisplay = ({ results }) => {
                   >
                     {prediction.toFixed(4)}
                   </Text>
-                  {confidence_intervals &&
-                    confidence_intervals[meterId] &&
-                    confidence_intervals[meterId][index] && (
-                      <Text
-                        style={[
-                          styles.confidenceInterval,
-                          { color: theme.colors.onSurfaceVariant },
-                        ]}
-                      >
-                        95% CI: [
-                        {confidence_intervals[meterId][index][0].toFixed(4)},{" "}
-                        {confidence_intervals[meterId][index][1].toFixed(4)}]
-                      </Text>
-                    )}
+                  {confidence_intervals?.[meterId]?.[index] && (
+                    <Text
+                      style={[
+                        styles.confidenceInterval,
+                        { color: theme.colors.onSurfaceVariant },
+                      ]}
+                    >
+                      95% CI: [
+                      {confidence_intervals[meterId][index][0].toFixed(4)},{" "}
+                      {confidence_intervals[meterId][index][1].toFixed(4)}]
+                    </Text>
+                  )}
                 </View>
               ))}
             </Card.Content>
@@ -100,7 +97,7 @@ const ResultsDisplay = ({ results }) => {
                 >
                   {prediction.toFixed(4)}
                 </Text>
-                {confidence_intervals && confidence_intervals[index] && (
+                {confidence_intervals?.[index] && (
                   <Text
                     style={[
                       styles.confidenceInterval,

@@ -1,13 +1,13 @@
-import React, { useEffect } from "react";
 import {
-  Box,
-  VStack,
   Alert,
+  AlertDescription,
   AlertIcon,
   AlertTitle,
-  AlertDescription,
+  Box,
   CloseButton,
+  VStack,
 } from "@chakra-ui/react";
+import { useEffect } from "react";
 import { useUI } from "../../contexts/UIContext";
 
 const NotificationCenter = ({ notifications }) => {

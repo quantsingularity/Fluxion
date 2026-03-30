@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useWeb3 } from "../lib/web3-config.jsx";
 import AssetSelector from "./AssetSelector";
 import WeightEditor from "./WeightEditor";

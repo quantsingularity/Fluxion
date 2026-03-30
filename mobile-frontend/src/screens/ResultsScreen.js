@@ -1,5 +1,4 @@
-import React from "react";
-import { View, StyleSheet, SafeAreaView } from "react-native";
+import { SafeAreaView, StyleSheet, View } from "react-native";
 import { Button, useTheme } from "react-native-paper";
 import ResultsDisplay from "../components/ResultsDisplay";
 

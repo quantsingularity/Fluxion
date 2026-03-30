@@ -1,13 +1,13 @@
 import {
-  isValidEthereumAddress,
-  shortenAddress,
-  formatNumber,
+  clamp,
   formatCompactNumber,
+  formatNumber,
   formatPercentage,
-  timeAgo,
+  isValidEthereumAddress,
   isValidJSON,
   safeJSONParse,
-  clamp,
+  shortenAddress,
+  timeAgo,
 } from "../utils/helpers";
 
 describe("Helper Functions", () => {

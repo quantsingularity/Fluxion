@@ -1,8 +1,7 @@
-import React from "react";
-import { render, fireEvent } from "@testing-library/react-native";
-import ResultsScreen from "../screens/ResultsScreen";
 import { NavigationContainer } from "@react-navigation/native";
+import { fireEvent, render } from "@testing-library/react-native";
 import { Provider as PaperProvider } from "react-native-paper";
+import ResultsScreen from "../screens/ResultsScreen";
 
 // Mock the ResultsDisplay component
 jest.mock("../components/ResultsDisplay", () => {

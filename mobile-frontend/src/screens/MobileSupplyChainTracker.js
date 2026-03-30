@@ -1,27 +1,25 @@
-import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-  ActivityIndicator,
-  SafeAreaView,
-  StatusBar,
-  FlatList,
-  Image,
-  Dimensions,
-  Alert,
-  Modal,
-} from "react-native";
-import { MaterialIcons, FontAwesome5, Ionicons } from "@expo/vector-icons";
-import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from "react-native-maps";
-import QRCode from "react-native-qrcode-svg";
+import { MaterialIcons } from "@expo/vector-icons";
 import { BarCodeScanner } from "expo-barcode-scanner";
 import { Camera } from "expo-camera";
 import * as Location from "expo-location";
-import { LinearGradient } from "expo-linear-gradient";
+import { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  Dimensions,
+  FlatList,
+  Modal,
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from "react-native-maps";
+import QRCode from "react-native-qrcode-svg";
 
 // Get screen dimensions
 const { width, height } = Dimensions.get("window");
@@ -122,14 +120,14 @@ const MobileSupplyChainTracker = () => {
   useEffect(() => {
     fetchAssets();
     requestLocationPermission();
-  }, []);
+  }, [fetchAssets, requestLocationPermission]);
 
   // Fetch asset transfers when an asset is selected
   useEffect(() => {
     if (selectedAsset) {
       fetchTransfers(selectedAsset.id);
     }
-  }, [selectedAsset]);
+  }, [selectedAsset, fetchTransfers]);
 
   // Request camera permissions
   const requestCameraPermission = async () => {
@@ -231,7 +229,7 @@ const MobileSupplyChainTracker = () => {
       if (foundAsset) {
         setSelectedAsset(foundAsset);
       }
-    } catch (error) {
+    } catch (_error) {
       Alert.alert(
         "Invalid QR Code",
         "The scanned QR code is not a valid asset.",
@@ -354,7 +352,7 @@ const MobileSupplyChainTracker = () => {
         <View
           style={[
             styles.statusBadge,
-            { backgroundColor: getStatusColor(item.status) + "20" },
+            { backgroundColor: `${getStatusColor(item.status)}20` },
           ]}
         >
           <Text
@@ -480,7 +478,7 @@ const MobileSupplyChainTracker = () => {
                 styles.filterChip,
                 statusFilter === status && styles.activeFilterChip,
                 statusFilter === status && {
-                  backgroundColor: getStatusColor(status) + "20",
+                  backgroundColor: `${getStatusColor(status)}20`,
                 },
               ]}
               onPress={() => handleStatusFilterChange(status)}
@@ -517,8 +515,7 @@ const MobileSupplyChainTracker = () => {
                 style={[
                   styles.statusBadge,
                   {
-                    backgroundColor:
-                      getStatusColor(selectedAsset.status) + "20",
+                    backgroundColor: `${getStatusColor(selectedAsset.status)}20`,
                   },
                 ]}
               >

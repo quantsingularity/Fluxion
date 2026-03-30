@@ -1,6 +1,4 @@
-import React from "react";
-import { createContext, useContext, useState, useEffect } from "react";
-import axios from "axios";
+import { createContext, useContext, useEffect, useState } from "react";
 
 // Create context
 const DataContext = createContext(null);
@@ -185,7 +183,7 @@ export const DataProvider = ({ children }) => {
     fetchMarketData();
     fetchPoolsData();
     fetchAnalyticsData();
-  }, []);
+  }, [fetchAnalyticsData, fetchMarketData, fetchPoolsData]);
 
   // Context value
   const value = {

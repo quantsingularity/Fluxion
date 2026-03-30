@@ -1,11 +1,11 @@
+import { ChakraProvider, extendTheme } from "@chakra-ui/react";
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { ChakraProvider, extendTheme } from "@chakra-ui/react";
 import { BrowserRouter as Router } from "react-router-dom";
 import App from "./App";
-import { Web3Provider } from "./lib/web3-config.jsx";
 import { DataProvider } from "./lib/data-context";
 import { UIProvider } from "./lib/ui-context";
+import { Web3Provider } from "./lib/web3-config.jsx";
 import "./index.css";
 
 // Theme customization
@@ -54,7 +54,7 @@ const theme = extendTheme({
     heading: "Inter, system-ui, sans-serif",
   },
   styles: {
-    global: (props) => ({
+    global: (_props) => ({
       body: {
         bg: "gray.900",
         color: "white",

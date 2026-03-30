@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useWeb3 } from "../lib/web3-config.jsx";
 import HeatmapChart from "./HeatmapChart";
 
@@ -20,7 +20,7 @@ export default function RiskMatrix() {
       );
     };
     fetchData();
-  }, [pools]);
+  }, []);
 
   return (
     <div className="risk-matrix-container">

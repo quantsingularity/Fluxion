@@ -1,59 +1,46 @@
-import React, { useState } from "react";
 import {
-  Box,
-  Flex,
-  Heading,
-  Text,
-  SimpleGrid,
-  Button,
-  HStack,
-  VStack,
-  Icon,
-  useColorModeValue,
   Badge,
-  Stat,
-  StatLabel,
-  StatNumber,
-  StatHelpText,
-  StatArrow,
+  Box,
+  Button,
   Card,
   CardBody,
-  Tabs,
-  TabList,
-  TabPanels,
+  Flex,
+  Heading,
+  HStack,
+  Icon,
+  SimpleGrid,
+  Stat,
+  StatArrow,
+  StatHelpText,
+  StatLabel,
+  StatNumber,
   Tab,
+  TabList,
   TabPanel,
-  Menu,
-  MenuButton,
-  MenuList,
-  MenuItem,
-  IconButton,
+  TabPanels,
+  Tabs,
+  Text,
+  useColorModeValue,
+  VStack,
 } from "@chakra-ui/react";
-import {
-  FiTrendingUp,
-  FiDroplet,
-  FiDollarSign,
-  FiActivity,
-  FiPlus,
-} from "react-icons/fi";
+import { useState } from "react";
+import { FiActivity, FiDollarSign, FiDroplet, FiPlus } from "react-icons/fi";
 import { Link as RouterLink } from "react-router-dom";
-import { useWeb3 } from "../../lib/web3-config.jsx";
 import {
-  LineChart,
-  Line,
-  AreaChart,
   Area,
-  BarChart,
+  AreaChart,
   Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
 } from "recharts";
+import { useWeb3 } from "../../lib/web3-config.jsx";
 
 // Mock data for charts
 const tvlData = [
@@ -89,7 +76,7 @@ const Dashboard = () => {
   const { isConnected, pools } = useWeb3();
   const cardBg = useColorModeValue("gray.800", "gray.700");
   const borderColor = useColorModeValue("gray.700", "gray.600");
-  const textColor = useColorModeValue("white", "white");
+  const _textColor = useColorModeValue("white", "white");
   const subTextColor = useColorModeValue("gray.400", "gray.400");
 
   // State for active tab
@@ -415,7 +402,7 @@ const Dashboard = () => {
                     `${name} ${(percent * 100).toFixed(0)}%`
                   }
                 >
-                  {poolDistribution.map((entry, index) => (
+                  {poolDistribution.map((_entry, index) => (
                     <Cell
                       key={`cell-${index}`}
                       fill={COLORS[index % COLORS.length]}
