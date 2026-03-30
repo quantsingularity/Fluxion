@@ -91,7 +91,7 @@ class MetricsCollector:
     - Metrics aggregation and storage
     """
 
-    def __init__(self) -> Any:
+    def __init__(self) -> None:
         self.metrics: Dict[str, deque] = defaultdict(lambda: deque(maxlen=1000))
         self.counters: Dict[str, float] = defaultdict(float)
         self.gauges: Dict[str, float] = defaultdict(float)
@@ -629,7 +629,7 @@ class TimedContext:
 
     def __init__(
         self, metric_name: str, labels: Optional[Dict[str, str]] = None
-    ) -> Any:
+    ) -> None:
         self.metric_name = metric_name
         self.labels = labels or {}
         self.start_time = None

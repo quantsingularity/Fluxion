@@ -146,7 +146,7 @@ class AnalyticsService:
     and KPI monitoring.
     """
 
-    def __init__(self) -> Any:
+    def __init__(self) -> None:
         self.cache_duration: timedelta = timedelta(minutes=15)
         self.max_data_points: int = 1000
         self.QUANTIZE_PRECISION = Decimal("0.01")

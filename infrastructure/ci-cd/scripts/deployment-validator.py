@@ -21,7 +21,7 @@ logger = get_logger(__name__)
 class DeploymentValidator:
     """Production deployment readiness validator"""
 
-    def __init__(self, environment: str = "production") -> Any:
+    def __init__(self, environment: str = "production") -> None:
         self.environment = environment
         self.checks = []
         self.failures = []

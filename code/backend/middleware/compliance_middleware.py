@@ -84,7 +84,7 @@ class ComplianceMiddleware(BaseHTTPMiddleware):
     including KYC, AML, transaction monitoring, and data protection compliance.
     """
 
-    def __init__(self, app: Any) -> Any:
+    def __init__(self, app: Any) -> None:
         super().__init__(app)
         self.compliance_service = ComplianceService()
         self.kyc_service = KYCService()

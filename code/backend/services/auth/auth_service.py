@@ -40,7 +40,7 @@ class AuthService:
         mfa_service: MFAService,
         session_service: SessionService,
         security_service: SecurityService,
-    ) -> Any:
+    ) -> None:
         self.jwt_service = jwt_service
         self.mfa_service = mfa_service
         self.session_service = session_service

@@ -84,7 +84,7 @@ class StructuredFormatter(logging.Formatter):
 
     def __init__(
         self, service_name: str = "fluxion-backend", version: str = "1.0.0"
-    ) -> Any:
+    ) -> None:
         super().__init__()
         self.service_name = service_name
         self.version = version
@@ -166,7 +166,7 @@ class StructuredFormatter(logging.Formatter):
 class SecurityLogger:
     """Specialized logger for security events"""
 
-    def __init__(self, logger: logging.Logger) -> Any:
+    def __init__(self, logger: logging.Logger) -> None:
         self.logger = logger
 
     def log_authentication_attempt(
@@ -242,7 +242,7 @@ class SecurityLogger:
 class ComplianceLogger:
     """Specialized logger for compliance events"""
 
-    def __init__(self, logger: logging.Logger) -> Any:
+    def __init__(self, logger: logging.Logger) -> None:
         self.logger = logger
 
     def log_data_access(
@@ -301,7 +301,7 @@ class ComplianceLogger:
 class PerformanceLogger:
     """Specialized logger for performance events"""
 
-    def __init__(self, logger: logging.Logger) -> Any:
+    def __init__(self, logger: logging.Logger) -> None:
         self.logger = logger
 
     def log_request_performance(
@@ -343,7 +343,7 @@ class PerformanceLogger:
 class BusinessLogger:
     """Specialized logger for business events"""
 
-    def __init__(self, logger: logging.Logger) -> Any:
+    def __init__(self, logger: logging.Logger) -> None:
         self.logger = logger
 
     def log_transaction(
@@ -394,7 +394,7 @@ _context_storage = threading.local()
 class FluxionLogger:
     """Main logger class for Fluxion backend"""
 
-    def __init__(self, name: str = "fluxion-backend") -> Any:
+    def __init__(self, name: str = "fluxion-backend") -> None:
         self.name = name
         self.logger = logging.getLogger(name)
         self.formatter = StructuredFormatter(service_name=name)

@@ -25,7 +25,7 @@ class LiquidityLSTM(nn.Module):
         hidden_size: Any = 64,
         num_layers: Any = 3,
         num_heads: Any = 4,
-    ) -> Any:
+    ) -> None:
         super().__init__()
         self.lstm = nn.LSTM(
             input_size=input_size,
@@ -52,7 +52,7 @@ class LiquidityLSTM(nn.Module):
 class TimeSeriesDataset(Dataset):
     """Custom Dataset for time series data."""
 
-    def __init__(self, X: Any, y: Any) -> Any:
+    def __init__(self, X: Any, y: Any) -> None:
         self.X = torch.tensor(X, dtype=torch.float32)
         self.y = torch.tensor(y, dtype=torch.float32).unsqueeze(1)
 

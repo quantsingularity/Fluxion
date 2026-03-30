@@ -150,7 +150,7 @@ class TransactionService:
     - Audit trail and reporting
     """
 
-    def __init__(self) -> Any:
+    def __init__(self) -> None:
         self.encryption_service = EncryptionService()
         self.kyc_service = KYCService()
         self.default_transaction_limits = {

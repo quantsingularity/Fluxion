@@ -129,7 +129,7 @@ class UserService:
     - User analytics and reporting
     """
 
-    def __init__(self) -> Any:
+    def __init__(self) -> None:
         self.encryption_service = EncryptionService()
         self.jwt_service = JWTService()
         self.kyc_service = KYCService()

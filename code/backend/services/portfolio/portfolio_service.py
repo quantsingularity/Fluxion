@@ -172,7 +172,7 @@ class PortfolioService:
     - Reporting and analytics
     """
 
-    def __init__(self) -> Any:
+    def __init__(self) -> None:
         self.encryption_service = EncryptionService()
         self.default_rebalancing_threshold = Decimal("0.05")
         self.performance_calculation_periods = [

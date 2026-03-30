@@ -5,7 +5,7 @@ from sklearn.preprocessing import RobustScaler
 
 class DataPipeline:
 
-    def __init__(self) -> Any:
+    def __init__(self) -> None:
         self.scaler = RobustScaler()
         self.features = [
             "volume",

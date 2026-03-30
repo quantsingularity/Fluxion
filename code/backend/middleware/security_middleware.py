@@ -34,7 +34,7 @@ class SecurityMiddleware(BaseHTTPMiddleware):
     - Request/response sanitization
     """
 
-    def __init__(self, app: Any) -> Any:
+    def __init__(self, app: Any) -> None:
         super().__init__(app)
         self.jwt_service = JWTService()
         self.threat_detection = ThreatDetectionService()
@@ -314,7 +314,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     Lightweight security headers middleware for cases where full SecurityMiddleware is not needed
     """
 
-    def __init__(self, app: Any) -> Any:
+    def __init__(self, app: Any) -> None:
         super().__init__(app)
         self.security_headers = {
             "X-Content-Type-Options": "nosniff",

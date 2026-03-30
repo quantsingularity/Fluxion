@@ -172,7 +172,7 @@ class NotificationService:
     - Integration with external services
     """
 
-    def __init__(self) -> Any:
+    def __init__(self) -> None:
         self.encryption_service = EncryptionService()
         self.max_retries = 3
         self.retry_delays = [300, 900, 3600]

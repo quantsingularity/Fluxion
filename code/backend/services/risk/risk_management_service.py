@@ -94,7 +94,7 @@ class RiskManagementService:
     - Automated risk alerts and notifications
     """
 
-    def __init__(self) -> Any:
+    def __init__(self) -> None:
         self.confidence_levels = [0.95, 0.99, 0.999]
         self.var_time_horizons = [1, 5, 10]
         self.max_concentration_single_asset = 0.25

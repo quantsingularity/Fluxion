@@ -19,7 +19,7 @@ logger = get_logger(__name__)
 class ComplianceValidator:
     """Financial compliance validator for Fluxion infrastructure"""
 
-    def __init__(self, framework: str = "financial") -> Any:
+    def __init__(self, framework: str = "financial") -> None:
         self.framework = framework
         self.violations = []
         self.warnings = []

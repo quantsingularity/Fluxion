@@ -187,7 +187,7 @@ def mock_blockchain_response() -> dict:
 class MockExternalService:
     """Mock external service for testing."""
 
-    def __init__(self) -> Any:
+    def __init__(self) -> None:
         self.calls = []
 
     async def call_api(self, endpoint: str, data: dict = None) -> dict:

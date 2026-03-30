@@ -100,7 +100,7 @@ class JWTService:
     - Audit logging
     """
 
-    def __init__(self) -> Any:
+    def __init__(self) -> None:
         self.encryption_service = EncryptionService()
         self.algorithm = settings.security.ALGORITHM
         self.secret_key = settings.security.SECRET_KEY

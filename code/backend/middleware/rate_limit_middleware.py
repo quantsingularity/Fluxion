@@ -45,7 +45,7 @@ class RateLimitStatus:
 class TokenBucket:
     """Token bucket algorithm implementation"""
 
-    def __init__(self, capacity: int, refill_rate: float) -> Any:
+    def __init__(self, capacity: int, refill_rate: float) -> None:
         self.capacity = capacity
         self.tokens = capacity
         self.refill_rate = refill_rate
@@ -74,7 +74,7 @@ class TokenBucket:
 class SlidingWindowCounter:
     """Sliding window counter for precise rate limiting"""
 
-    def __init__(self, window_size: int, max_requests: int) -> Any:
+    def __init__(self, window_size: int, max_requests: int) -> None:
         self.window_size = window_size
         self.max_requests = max_requests
         self.requests = deque()
@@ -107,7 +107,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     - Integration with Redis for distributed rate limiting
     """
 
-    def __init__(self, app: Any) -> Any:
+    def __init__(self, app: Any) -> None:
         super().__init__(app)
         self.default_rules = {
             "anonymous": RateLimitRule(
@@ -435,7 +435,7 @@ class AdaptiveRateLimitMiddleware(RateLimitMiddleware):
     Adaptive rate limiting that adjusts limits based on system load and user behavior
     """
 
-    def __init__(self, app: Any) -> Any:
+    def __init__(self, app: Any) -> None:
         super().__init__(app)
         self.system_load_factor = 1.0
         self.user_behavior_scores: Dict[str, float] = defaultdict(lambda: 1.0)

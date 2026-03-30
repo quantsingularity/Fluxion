@@ -94,7 +94,7 @@ class ThreatDetectionService:
     - Statistical analysis for outlier detection
     """
 
-    def __init__(self) -> Any:
+    def __init__(self) -> None:
         self.encryption_service = EncryptionService()
         self.max_failed_attempts = 5
         self.failed_attempt_window = timedelta(minutes=15)

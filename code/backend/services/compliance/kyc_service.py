@@ -113,7 +113,7 @@ class KYCService:
     - Risk-based approach to customer due diligence
     """
 
-    def __init__(self) -> Any:
+    def __init__(self) -> None:
         self.encryption_service = EncryptionService()
         self.tier_requirements = {
             KYCTier.BASIC: {

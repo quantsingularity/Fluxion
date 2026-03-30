@@ -22,7 +22,7 @@ class LiquidityLSTM(nn.Module):
         num_layers: Any = 4,
         dropout: Any = 0.2,
         bidirectional: Any = True,
-    ) -> Any:
+    ) -> None:
         super().__init__()
         self.input_size = input_size
         self.hidden_size = hidden_size
@@ -75,7 +75,7 @@ class SupplyChainForecaster(nn.Module):
         hidden_size: Any = 128,
         num_layers: Any = 3,
         dropout: Any = 0.2,
-    ) -> Any:
+    ) -> None:
         super().__init__()
         self.input_size = input_size
         self.hidden_size = hidden_size
@@ -116,7 +116,7 @@ class ModelTrainer:
 
     def __init__(
         self, model: Any, learning_rate: Any = 0.001, weight_decay: Any = 1e-05
-    ) -> Any:
+    ) -> None:
         self.model = model
         self.optimizer = optim.AdamW(
             model.parameters(), lr=learning_rate, weight_decay=weight_decay

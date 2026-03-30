@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 class ComplianceService:
     """Comprehensive compliance service"""
 
-    def __init__(self) -> Any:
+    def __init__(self) -> None:
         self.transaction_threshold_usd = Decimal("10000")
         self.daily_threshold_usd = Decimal("50000")
         self.suspicious_velocity_threshold = 10

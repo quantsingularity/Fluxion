@@ -81,7 +81,7 @@ class AuditMiddleware(BaseHTTPMiddleware):
     and creates immutable audit trails for compliance and forensic analysis.
     """
 
-    def __init__(self, app: Any) -> Any:
+    def __init__(self, app: Any) -> None:
         super().__init__(app)
         self.audit_service = AuditService()
         self.encryption_service = EncryptionService()

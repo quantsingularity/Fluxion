@@ -19,7 +19,7 @@ class AnomalyDetector:
     Anomaly detection system for blockchain transactions and supply chain events
     """
 
-    def __init__(self, contamination: Any = 0.05, random_state: Any = 42) -> Any:
+    def __init__(self, contamination: Any = 0.05, random_state: Any = 42) -> None:
         self.contamination = contamination
         self.random_state = random_state
         self.isolation_forest = IsolationForest(
@@ -134,7 +134,7 @@ class ModelVersionManager:
     Manages model versioning and A/B testing
     """
 
-    def __init__(self, model_dir: Any = "models") -> Any:
+    def __init__(self, model_dir: Any = "models") -> None:
         self.model_dir = model_dir
         self.models = {}
         self.active_models = {}

@@ -80,7 +80,7 @@ class EncryptionService:
     - Digital signatures
     """
 
-    def __init__(self) -> Any:
+    def __init__(self) -> None:
         self.backend = default_backend()
         self.keys: Dict[str, Any] = {}
         self.key_rotation_interval = timedelta(days=90)

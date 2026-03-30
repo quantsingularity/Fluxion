@@ -36,7 +36,7 @@ class FinancialRiskLSTM(nn.Module):
         num_layers: Any = 3,
         dropout: Any = 0.3,
         num_risk_factors: Any = 5,
-    ) -> Any:
+    ) -> None:
         super().__init__()
         self.input_size = input_size
         self.hidden_size = hidden_size
@@ -132,7 +132,7 @@ class AnomalyDetectionModel(nn.Module):
 
     def __init__(
         self, input_size: Any = 50, encoding_dim: Any = 20, dropout: Any = 0.2
-    ) -> Any:
+    ) -> None:
         super().__init__()
         self.input_size = input_size
         self.encoding_dim = encoding_dim
@@ -174,7 +174,7 @@ class ComplianceViolationDetector(nn.Module):
 
     def __init__(
         self, input_size: Any = 30, hidden_size: Any = 128, num_classes: Any = 6
-    ) -> Any:
+    ) -> None:
         super().__init__()
         self.input_size = input_size
         self.hidden_size = hidden_size
@@ -223,7 +223,7 @@ class FinancialRiskPredictor:
     Comprehensive financial risk prediction system
     """
 
-    def __init__(self, config: Any = None) -> Any:
+    def __init__(self, config: Any = None) -> None:
         self.config = config or self._default_config()
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.risk_model = None

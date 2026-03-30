@@ -129,7 +129,7 @@ class AdvancedAnalyticsService:
     - Automated reporting and alerts
     """
 
-    def __init__(self) -> Any:
+    def __init__(self) -> None:
         self.cache_ttl = 300
         self.real_time_update_interval = 30
         self.benchmarks = {
