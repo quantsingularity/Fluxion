@@ -5,7 +5,7 @@ Authentication service for Fluxion backend
 import logging
 import secrets
 import string
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional, Tuple
 from uuid import UUID
 
@@ -75,8 +75,8 @@ class AuthService:
                 phone_number=user_data.phone_number,
                 country=user_data.country,
                 status=UserStatus.PENDING,
-                terms_accepted_at=datetime.utcnow(),
-                privacy_accepted_at=datetime.utcnow(),
+                terms_accepted_at=datetime.now(timezone.utc),
+                privacy_accepted_at=datetime.now(timezone.utc),
             )
             db.add(user)
             await db.flush()
@@ -136,7 +136,7 @@ class AuthService:
                     raise AuthenticationError("Invalid MFA code")
             user.failed_login_attempts = 0
             user.locked_until = None
-            user.last_login_at = datetime.utcnow()
+            user.last_login_at = datetime.now(timezone.utc)
             user.last_login_ip = ip_address
             session = await self.session_service.create_session(
                 db, user.id, ip_address, user_agent, login_data.remember_me
@@ -210,7 +210,7 @@ class AuthService:
             new_refresh_token = self.jwt_service.create_refresh_token(token_data)
             session.session_token = access_token
             session.refresh_token = new_refresh_token
-            session.last_activity_at = datetime.utcnow()
+            session.last_activity_at = datetime.now(timezone.utc)
             token_response = TokenResponse(
                 access_token=access_token,
                 refresh_token=new_refresh_token,
@@ -289,7 +289,7 @@ class AuthService:
                 raise AuthenticationError("Invalid current password")
             new_hashed_password = self._hash_password(password_data.new_password)
             user.hashed_password = new_hashed_password
-            user.password_changed_at = datetime.utcnow()
+            user.password_changed_at = datetime.now(timezone.utc)
             await self.session_service.invalidate_user_sessions(
                 db, user_id, exclude_current=True
             )
@@ -407,7 +407,7 @@ class AuthService:
         user.failed_login_attempts += 1
         if user.failed_login_attempts >= settings.auth.MAX_LOGIN_ATTEMPTS:
             user.status = UserStatus.LOCKED
-            user.locked_until = datetime.utcnow() + timedelta(
+            user.locked_until = datetime.now(timezone.utc) + timedelta(
                 minutes=settings.auth.ACCOUNT_LOCKOUT_DURATION
             )
         await self._log_failed_login(

@@ -1,0 +1,61 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+*.egg-info/
+dist/
+build/
+.tox/
+.coverage
+.cache
+.pytest_cache/
+htmlcov/
+
+# Environment
+.env
+.env.*
+!.env.example
+*.env
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# DB
+*.db
+*.sqlite3
+
+# Docker volumes (local)
+postgres_data/
+redis_data/
+
+# Compiled
+*.pyc
+*.pyo
+*.pyd
+
+# Type checking
+.mypy_cache/
+
+# ML Models
+*.pkl
+*.joblib
+*.h5
+*.pt
+*.pth
+ml_models/models/

@@ -2,7 +2,7 @@
 Base Pydantic schemas for Fluxion backend
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, Generic, List, Optional, TypeVar
 from uuid import UUID
 
@@ -35,7 +35,8 @@ class BaseResponse(BaseSchema):
         "Operation completed successfully", description="Response message"
     )
     timestamp: datetime = Field(
-        default_factory=datetime.utcnow, description="Response timestamp"
+        default_factory=lambda: datetime.now(timezone.utc),
+        description="Response timestamp",
     )
 
 
@@ -47,7 +48,8 @@ class ErrorResponse(BaseSchema):
     error_code: Optional[str] = Field(None, description="Error code")
     details: Optional[Dict[str, Any]] = Field(None, description="Error details")
     timestamp: datetime = Field(
-        default_factory=datetime.utcnow, description="Response timestamp"
+        default_factory=lambda: datetime.now(timezone.utc),
+        description="Response timestamp",
     )
 
 
@@ -71,7 +73,8 @@ class DataResponse(BaseModel, Generic[DataT]):
     message: str = Field("Data retrieved successfully", description="Response message")
     data: DataT = Field(..., description="Response data")
     timestamp: datetime = Field(
-        default_factory=datetime.utcnow, description="Response timestamp"
+        default_factory=lambda: datetime.now(timezone.utc),
+        description="Response timestamp",
     )
 
 
@@ -98,7 +101,8 @@ class PaginatedResponse(BaseModel, Generic[DataT]):
     data: List[DataT] = Field(..., description="Response data items")
     meta: PaginationMeta = Field(..., description="Pagination metadata")
     timestamp: datetime = Field(
-        default_factory=datetime.utcnow, description="Response timestamp"
+        default_factory=lambda: datetime.now(timezone.utc),
+        description="Response timestamp",
     )
 
 
@@ -107,7 +111,8 @@ class HealthCheckResponse(BaseSchema):
 
     status: str = Field(..., description="Overall health status")
     timestamp: datetime = Field(
-        default_factory=datetime.utcnow, description="Health check timestamp"
+        default_factory=lambda: datetime.now(timezone.utc),
+        description="Health check timestamp",
     )
     version: str = Field(..., description="Application version")
     uptime: float = Field(..., description="Application uptime in seconds")
@@ -119,7 +124,8 @@ class MetricsResponse(BaseSchema):
 
     metrics: Dict[str, Any] = Field(..., description="Application metrics")
     timestamp: datetime = Field(
-        default_factory=datetime.utcnow, description="Metrics timestamp"
+        default_factory=lambda: datetime.now(timezone.utc),
+        description="Metrics timestamp",
     )
 
 
@@ -243,7 +249,8 @@ class WebhookPayload(BaseSchema):
     event_type: str = Field(..., description="Event type")
     event_id: UUID = Field(..., description="Event ID")
     timestamp: datetime = Field(
-        default_factory=datetime.utcnow, description="Event timestamp"
+        default_factory=lambda: datetime.now(timezone.utc),
+        description="Event timestamp",
     )
     data: Dict[str, Any] = Field(..., description="Event data")
     signature: Optional[str] = Field(None, description="Payload signature")

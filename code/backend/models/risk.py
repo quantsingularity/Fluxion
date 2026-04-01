@@ -172,7 +172,7 @@ class RiskProfile(BaseModel, TimestampMixin, AuditMixin):
     def needs_review(self) -> bool:
         """Check if risk profile needs review"""
         if self.next_review_due:
-            return datetime.utcnow() >= self.next_review_due
+            return datetime.now(timezone.utc) >= self.next_review_due
         return False
 
     def calculate_risk_score(self) -> int:
@@ -412,7 +412,7 @@ class RiskAlert(BaseModel, TimestampMixin, AuditMixin):
     def is_overdue(self, hours: int = 4) -> bool:
         """Check if alert response is overdue"""
         if self.is_active():
-            delta = datetime.utcnow() - self.triggered_at
+            delta = datetime.now(timezone.utc) - self.triggered_at
             return delta.total_seconds() > (hours * 3600)
         return False
 
@@ -519,10 +519,10 @@ class RiskLimit(BaseModel, TimestampMixin, AuditMixin):
         """Update breach status based on current value"""
         if self.current_value and self.current_value > self.limit_value:
             if not self.is_breached:
-                self.first_breach_at = datetime.utcnow()
+                self.first_breach_at = datetime.now(timezone.utc)
                 self.breach_count += 1
             self.is_breached = True
-            self.last_breach_at = datetime.utcnow()
+            self.last_breach_at = datetime.now(timezone.utc)
         else:
             self.is_breached = False
 

@@ -4,6 +4,9 @@ import os
 from datetime import datetime
 from typing import Any
 
+import matplotlib
+
+matplotlib.use("Agg")  # Non-interactive backend for server use
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd

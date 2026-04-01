@@ -1,0 +1,225 @@
+# ============================================================
+# Fluxion – Docker Compose (Development + Production)
+# ============================================================
+
+services:
+  # ---- PostgreSQL (Primary) ----
+  db:
+    image: postgres:16-alpine
+    container_name: fluxion_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: fluxion
+      POSTGRES_PASSWORD: fluxion
+      POSTGRES_DB: fluxion
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init_db.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fluxion -d fluxion"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - fluxion_net
+
+  # ---- Redis ----
+  redis:
+    image: redis:7-alpine
+    container_name: fluxion_redis
+    restart: unless-stopped
+    command: >
+      redis-server
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+      --save 60 1
+      --loglevel notice
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - fluxion_net
+
+  # ---- Fluxion Backend API ----
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: fluxion_api
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://fluxion:fluxion@db:5432/fluxion
+      REDIS_URL: redis://redis:6379/0
+      ENVIRONMENT: development
+      DEBUG: "true"
+    volumes:
+      - ./backend:/app
+      - api_logs:/app/logs
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    command: >
+      uvicorn app.main:app
+      --host 0.0.0.0
+      --port 8000
+      --reload
+      --log-level info
+    networks:
+      - fluxion_net
+
+  # ---- Celery Worker ----
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: fluxion_worker
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://fluxion:fluxion@db:5432/fluxion
+      REDIS_URL: redis://redis:6379/0
+    volumes:
+      - ./backend:/app
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: >
+      celery -A app.celery worker
+      --loglevel=info
+      --concurrency=4
+    networks:
+      - fluxion_net
+    profiles:
+      - celery
+
+  # ---- Celery Beat Scheduler ----
+  beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: fluxion_beat
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://fluxion:fluxion@db:5432/fluxion
+      REDIS_URL: redis://redis:6379/0
+    volumes:
+      - ./backend:/app
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: >
+      celery -A app.celery beat
+      --loglevel=info
+    networks:
+      - fluxion_net
+    profiles:
+      - celery
+
+  # ---- Flower (Celery monitor) ----
+  flower:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: fluxion_flower
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    environment:
+      REDIS_URL: redis://redis:6379/0
+    ports:
+      - "5555:5555"
+    depends_on:
+      - redis
+    command: >
+      celery -A app.celery flower
+      --port=5555
+      --broker=redis://redis:6379/0
+    networks:
+      - fluxion_net
+    profiles:
+      - celery
+
+  # ---- Prometheus (optional) ----
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: fluxion_prometheus
+    restart: unless-stopped
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/etc/prometheus/console_libraries"
+      - "--web.console.templates=/etc/prometheus/consoles"
+    networks:
+      - fluxion_net
+    profiles:
+      - monitoring
+
+  # ---- Grafana (optional) ----
+  grafana:
+    image: grafana/grafana:latest
+    container_name: fluxion_grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: fluxion_grafana
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    ports:
+      - "3001:3000"
+    depends_on:
+      - prometheus
+    networks:
+      - fluxion_net
+    profiles:
+      - monitoring
+
+volumes:
+  postgres_data:
+  redis_data:
+  api_logs:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  fluxion_net:
+    driver: bridge

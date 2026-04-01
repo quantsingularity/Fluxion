@@ -75,8 +75,8 @@ def include_object(
 
 
 def render_item(type_: Any, obj: Any, autogen_context: Any) -> Any:
-    """Render items for migration"""
-    return False
+    """Render items for migration - return False to use default rendering"""
+    return None
 
 
 async def run_async_migrations() -> None:

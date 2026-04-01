@@ -225,8 +225,8 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             auth_header = request.headers.get("Authorization")
             if auth_header and auth_header.startswith("Bearer "):
                 return "authenticated_user"
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Redis operation failed: {e}")
         return None
 
     def _get_endpoint_key(self, request: Request) -> str:

@@ -11,6 +11,10 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class AppSettings(BaseSettings):
     """Application settings"""
 
+    model_config = SettingsConfigDict(
+        env_file=".env", env_file_encoding="utf-8", case_sensitive=True, extra="ignore"
+    )
+
     APP_NAME: str = Field(default="Fluxion API")
     VERSION: str = Field(default="2.0.0")  # Changed from APP_VERSION to VERSION
     APP_DESCRIPTION: str = Field(default="Production-ready DeFi Supply Chain Platform")
@@ -44,6 +48,10 @@ class AppSettings(BaseSettings):
 class DatabaseSettings(BaseSettings):
     """Database settings"""
 
+    model_config = SettingsConfigDict(
+        env_file=".env", env_file_encoding="utf-8", case_sensitive=True, extra="ignore"
+    )
+
     DATABASE_URL: str = Field(
         default="postgresql+asyncpg://fluxion:fluxion@localhost:5432/fluxion"
     )
@@ -58,6 +66,10 @@ class DatabaseSettings(BaseSettings):
 class RedisSettings(BaseSettings):
     """Redis settings"""
 
+    model_config = SettingsConfigDict(
+        env_file=".env", env_file_encoding="utf-8", case_sensitive=True, extra="ignore"
+    )
+
     REDIS_URL: str = Field(default="redis://localhost:6379/0")
     REDIS_PASSWORD: Optional[str] = Field(default=None)
     REDIS_DB: int = Field(default=0)
@@ -68,6 +80,10 @@ class RedisSettings(BaseSettings):
 
 class SecuritySettings(BaseSettings):
     """Security settings"""
+
+    model_config = SettingsConfigDict(
+        env_file=".env", env_file_encoding="utf-8", case_sensitive=True, extra="ignore"
+    )
 
     SECRET_KEY: str = Field(
         default="development-secret-key-change-in-production-min-32-chars-long"
@@ -105,6 +121,10 @@ class SecuritySettings(BaseSettings):
 class BlockchainSettings(BaseSettings):
     """Blockchain settings"""
 
+    model_config = SettingsConfigDict(
+        env_file=".env", env_file_encoding="utf-8", case_sensitive=True, extra="ignore"
+    )
+
     ETH_RPC_URL: str = Field(default="http://localhost:8545")
     ETH_WEBSOCKET_URL: Optional[str] = Field(default=None)
     ETH_CHAIN_ID: int = Field(default=1)
@@ -126,6 +146,10 @@ class BlockchainSettings(BaseSettings):
 class ComplianceSettings(BaseSettings):
     """Compliance settings"""
 
+    model_config = SettingsConfigDict(
+        env_file=".env", env_file_encoding="utf-8", case_sensitive=True, extra="ignore"
+    )
+
     KYC_ENABLED: bool = Field(default=False)
     KYC_PROVIDER: str = Field(default="jumio")
     KYC_API_KEY: Optional[str] = Field(default=None)
@@ -143,6 +167,10 @@ class ComplianceSettings(BaseSettings):
 class MonitoringSettings(BaseSettings):
     """Monitoring and logging settings"""
 
+    model_config = SettingsConfigDict(
+        env_file=".env", env_file_encoding="utf-8", case_sensitive=True, extra="ignore"
+    )
+
     LOG_LEVEL: str = Field(default="INFO")
     LOG_FORMAT: str = Field(default="json")
     METRICS_ENABLED: bool = Field(default=True)
@@ -154,6 +182,10 @@ class MonitoringSettings(BaseSettings):
 
 class ExternalServicesSettings(BaseSettings):
     """External services settings"""
+
+    model_config = SettingsConfigDict(
+        env_file=".env", env_file_encoding="utf-8", case_sensitive=True, extra="ignore"
+    )
 
     NOTIFICATION_SERVICE_URL: Optional[str] = Field(default=None)
     ANALYTICS_SERVICE_URL: Optional[str] = Field(default=None)

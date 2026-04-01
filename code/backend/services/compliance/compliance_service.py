@@ -3,7 +3,7 @@ Compliance service for Fluxion backend
 """
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from typing import Any, Dict, List
 from uuid import UUID
@@ -123,7 +123,9 @@ class ComplianceService:
                 "patterns": [],
                 "recommendations": [],
             }
-            cutoff_time = datetime.utcnow() - timedelta(hours=activity_window_hours)
+            cutoff_time = datetime.now(timezone.utc) - timedelta(
+                hours=activity_window_hours
+            )
             result = await db.execute(
                 select(Transaction)
                 .where(
@@ -316,7 +318,7 @@ class ComplianceService:
 
     async def _get_user_daily_volume(self, db: AsyncSession, user_id: UUID) -> Decimal:
         """Get user's daily transaction volume"""
-        today = datetime.utcnow().date()
+        today = datetime.now(timezone.utc).date()
         result = await db.execute(
             select(func.sum(Transaction.usd_value)).where(
                 and_(
@@ -332,7 +334,7 @@ class ComplianceService:
         self, db: AsyncSession, user_id: UUID
     ) -> int:
         """Get user's transaction count in the last hour"""
-        one_hour_ago = datetime.utcnow() - timedelta(hours=1)
+        one_hour_ago = datetime.now(timezone.utc) - timedelta(hours=1)
         result = await db.execute(
             select(func.count(Transaction.id)).where(
                 and_(
@@ -355,7 +357,7 @@ class ComplianceService:
                     "message": f"User from high-risk country: {user.country}",
                 }
             )
-        account_age = datetime.utcnow() - user.created_at
+        account_age = datetime.now(timezone.utc) - user.created_at
         if account_age.days < 30:
             risk_assessment["score"] += 15
             risk_assessment["alerts"].append(
@@ -452,7 +454,7 @@ class ComplianceService:
                 "recommendations": compliance_result["recommendations"],
             },
             risk_score=compliance_result["risk_score"],
-            triggered_at=datetime.utcnow(),
+            triggered_at=datetime.now(timezone.utc),
         )
         db.add(alert)
 

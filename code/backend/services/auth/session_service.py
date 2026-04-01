@@ -4,7 +4,7 @@ Session management service stub
 """
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, Optional
 
 logger = logging.getLogger(__name__)
@@ -38,7 +38,7 @@ class SessionService:
         self.sessions[session_id] = {
             "user_id": user_id,
             "device_info": device_info or {},
-            "created_at": datetime.utcnow(),
+            "created_at": datetime.now(timezone.utc),
         }
         return session_id
 

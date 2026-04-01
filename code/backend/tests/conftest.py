@@ -3,7 +3,7 @@ Pytest configuration and fixtures for Fluxion backend tests
 """
 
 import asyncio
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, AsyncGenerator, Generator
 from uuid import uuid4
 
@@ -73,8 +73,8 @@ async def test_user(test_db: AsyncSession) -> User:
         role=UserRole.USER,
         is_email_verified=True,
         kyc_status=KYCStatus.APPROVED,
-        created_at=datetime.utcnow(),
-        updated_at=datetime.utcnow(),
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc),
     )
     test_db.add(user)
     await test_db.commit()
@@ -96,8 +96,8 @@ async def admin_user(test_db: AsyncSession) -> User:
         role=UserRole.ADMIN,
         is_email_verified=True,
         kyc_status=KYCStatus.APPROVED,
-        created_at=datetime.utcnow(),
-        updated_at=datetime.utcnow(),
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc),
     )
     test_db.add(user)
     await test_db.commit()
@@ -281,8 +281,8 @@ async def create_test_records(db: AsyncSession, model_class, count: int = 5, **k
         record_data.update(
             {
                 "id": uuid4(),
-                "created_at": datetime.utcnow(),
-                "updated_at": datetime.utcnow(),
+                "created_at": datetime.now(timezone.utc),
+                "updated_at": datetime.now(timezone.utc),
             }
         )
         record = model_class(**record_data)

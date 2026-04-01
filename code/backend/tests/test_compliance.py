@@ -5,7 +5,7 @@ Tests KYC, AML, and regulatory compliance functionality
 
 import asyncio
 import base64
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from typing import Any
 from unittest.mock import AsyncMock, patch
@@ -52,7 +52,7 @@ class TestKYCService:
             last_name="Doe",
             country="US",
             phone_number="+1234567890",
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc),
         )
 
     @pytest.fixture
@@ -68,7 +68,7 @@ class TestKYCService:
             identity_verified=False,
             address_verified=False,
             biometric_verified=False,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc),
         )
 
     @pytest.fixture
@@ -221,7 +221,7 @@ class TestKYCService:
             assert assessment.pep_check is not None
             assert assessment.adverse_media_check is not None
             assert isinstance(assessment.recommendations, list)
-            assert assessment.next_review_date > datetime.utcnow()
+            assert assessment.next_review_date > datetime.now(timezone.utc)
 
     @pytest.mark.asyncio
     async def test_sanctions_screening(self, kyc_service, sample_user):
@@ -285,7 +285,7 @@ class TestKYCService:
             first_name="John",
             last_name="Doe",
             country="AF",
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc),
         )
         sanctions_check_high = {"match_found": True}
         pep_check_high = {"is_pep": True}
@@ -315,7 +315,7 @@ class TestKYCService:
             verification_checks={},
             risk_indicators=[],
             processing_time=2.5,
-            verified_at=datetime.utcnow(),
+            verified_at=datetime.now(timezone.utc),
             expires_at=None,
         )
         standard_tier = asyncio.run(
@@ -521,7 +521,10 @@ class TestComplianceService:
     def test_transaction_pattern_analysis(self, compliance_service: Any) -> Any:
         """Test transaction pattern analysis"""
         normal_transactions = [
-            {"amount": 1000, "timestamp": datetime.utcnow() - timedelta(days=i)}
+            {
+                "amount": 1000,
+                "timestamp": datetime.now(timezone.utc) - timedelta(days=i),
+            }
             for i in range(30)
         ]
         normal_analysis = compliance_service.analyze_transaction_patterns(
@@ -531,7 +534,10 @@ class TestComplianceService:
         assert "risk_indicators" in normal_analysis
         assert normal_analysis["pattern_type"] == "normal"
         structuring_transactions = [
-            {"amount": 9500, "timestamp": datetime.utcnow() - timedelta(hours=i)}
+            {
+                "amount": 9500,
+                "timestamp": datetime.now(timezone.utc) - timedelta(hours=i),
+            }
             for i in range(10)
         ]
         suspicious_analysis = compliance_service.analyze_transaction_patterns(
@@ -602,7 +608,7 @@ class TestComplianceAPI:
                     verification_checks={},
                     risk_indicators=[],
                     processing_time=2.5,
-                    verified_at=datetime.utcnow(),
+                    verified_at=datetime.now(timezone.utc),
                     expires_at=None,
                 )
             )
@@ -636,8 +642,8 @@ class TestComplianceAPI:
                     source_of_funds_verification={},
                     ongoing_monitoring={},
                     recommendations=[],
-                    next_review_date=datetime.utcnow() + timedelta(days=90),
-                    assessed_at=datetime.utcnow(),
+                    next_review_date=datetime.now(timezone.utc) + timedelta(days=90),
+                    assessed_at=datetime.now(timezone.utc),
                 )
             )
             response = client.get(
@@ -663,7 +669,7 @@ class TestComplianceAPI:
                     quality_score=0.85,
                     is_match=True,
                     risk_indicators=[],
-                    verified_at=datetime.utcnow(),
+                    verified_at=datetime.now(timezone.utc),
                 )
             )
             response = client.post(

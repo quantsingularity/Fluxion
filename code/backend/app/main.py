@@ -187,8 +187,7 @@ async def request_logging_middleware(request: Request, call_next):
 
     # Log request
     logger.info(
-        f"Request: {request.method} {request.url.path} "
-        f"from {request.client.host if request.client else 'unknown'}"
+        f"Request: {request.method} {request.url.path} from {request.client.host if request.client else 'unknown'}"
     )
 
     # Process request
@@ -210,7 +209,7 @@ async def request_logging_middleware(request: Request, call_next):
 
 
 # Health check endpoints
-@app.get("/health", tags=["Health"])
+@app.get("/health", tags=["Health"], include_in_schema=False)
 async def health_check():
     """Basic health check"""
     return {

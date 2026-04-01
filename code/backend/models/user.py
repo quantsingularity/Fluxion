@@ -231,7 +231,7 @@ class User(
         """Check if user account is locked"""
         if self.status == UserStatus.LOCKED:
             return True
-        if self.locked_until and self.locked_until > datetime.utcnow():
+        if self.locked_until and self.locked_until > datetime.now(timezone.utc):
             return True
         return False
 
@@ -348,7 +348,7 @@ class UserSession(BaseModel, TimestampMixin):
 
     def is_expired(self) -> bool:
         """Check if session is expired"""
-        return datetime.utcnow() > self.expires_at
+        return datetime.now(timezone.utc) > self.expires_at
 
     def is_valid(self) -> bool:
         """Check if session is valid"""

@@ -6,7 +6,7 @@ following financial industry best practices and regulatory requirements.
 
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
@@ -193,7 +193,7 @@ class RiskManagementService:
                 liquidity_score=liquidity_score,
                 stress_test_loss=stress_test_loss,
                 risk_score=risk_score,
-                calculated_at=datetime.utcnow(),
+                calculated_at=datetime.now(timezone.utc),
             )
             await self._store_risk_assessment(db, portfolio_id, risk_metrics)
             logger.info(
@@ -367,7 +367,7 @@ class RiskManagementService:
                 "worst_case_loss": worst_case_loss,
                 "worst_case_scenario": worst_case_scenario[0],
                 "recovery_estimates": recovery_estimates,
-                "analysis_timestamp": datetime.utcnow().isoformat(),
+                "analysis_timestamp": datetime.now(timezone.utc).isoformat(),
                 "recommendations": await self._generate_risk_recommendations(
                     scenario_results, total_value
                 ),
@@ -582,7 +582,7 @@ class RiskManagementService:
             if concentration > self.max_concentration_single_asset:
                 alerts.append(
                     RiskAlert(
-                        risk_id=f"concentration_{asset.symbol}_{datetime.utcnow().timestamp()}",
+                        risk_id=f"concentration_{asset.symbol}_{datetime.now(timezone.utc).timestamp()}",
                         category=RiskCategory.CONCENTRATION_RISK,
                         severity=(
                             RiskSeverity.HIGH
@@ -597,8 +597,8 @@ class RiskManagementService:
                             "Diversify portfolio across more assets",
                             "Implement position size limits",
                         ],
-                        created_at=datetime.utcnow(),
-                        expires_at=datetime.utcnow() + timedelta(hours=24),
+                        created_at=datetime.now(timezone.utc),
+                        expires_at=datetime.now(timezone.utc) + timedelta(hours=24),
                         metadata={
                             "asset": asset.symbol,
                             "concentration": concentration,

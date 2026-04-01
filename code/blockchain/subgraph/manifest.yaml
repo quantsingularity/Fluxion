@@ -1,0 +1,24 @@
+specVersion: 0.0.5
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: LiquidityPoolManager
+    network: mainnet
+    source:
+      address: "0x0000000000000000000000000000000000000000"
+      abi: LiquidityPoolManager
+      startBlock: 0
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - LiquidityPool
+      abis:
+        - name: LiquidityPoolManager
+          file: ../contracts/LiquidityPoolManager.sol
+      eventHandlers:
+        - event: PoolCreated(bytes32,address[],uint256[],uint256,uint256)
+          handler: handlePoolCreated
+      file: ./src/mapping.ts

@@ -192,7 +192,7 @@ class KYCRecord(BaseModel, TimestampMixin, AuditMixin, EncryptedMixin):
 
     def is_expired(self) -> bool:
         """Check if KYC is expired"""
-        return self.expires_at and self.expires_at < datetime.utcnow()
+        return self.expires_at and self.expires_at < datetime.now(timezone.utc)
 
     def is_valid(self) -> bool:
         """Check if KYC is valid"""
@@ -201,7 +201,7 @@ class KYCRecord(BaseModel, TimestampMixin, AuditMixin, EncryptedMixin):
     def days_until_expiry(self) -> Optional[int]:
         """Get days until KYC expiry"""
         if self.expires_at:
-            delta = self.expires_at - datetime.utcnow()
+            delta = self.expires_at - datetime.now(timezone.utc)
             return max(0, delta.days)
         return None
 
@@ -333,7 +333,7 @@ class ComplianceAlert(BaseModel, TimestampMixin, AuditMixin):
     def is_overdue(self, hours: int = 24) -> bool:
         """Check if alert is overdue"""
         if self.is_open():
-            delta = datetime.utcnow() - self.triggered_at
+            delta = datetime.now(timezone.utc) - self.triggered_at
             return delta.total_seconds() > hours * 3600
         return False
 
@@ -390,7 +390,7 @@ class AuditLog(BaseModel, TimestampMixin):
         """Check if audit log is expired"""
         if self.retention_period:
             expiry_date = self.created_at + timedelta(days=self.retention_period)
-            return datetime.utcnow() > expiry_date
+            return datetime.now(timezone.utc) > expiry_date
         return False
 
     __table_args__ = (

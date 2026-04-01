@@ -6,7 +6,7 @@ and compliance monitoring following global regulatory standards.
 
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
 from uuid import UUID, uuid4
@@ -302,12 +302,12 @@ class KYCService:
                     user_id=user_id,
                     target_level=target_tier.value,
                     status=KYCStatus.PENDING,
-                    created_at=datetime.utcnow(),
+                    created_at=datetime.now(timezone.utc),
                 )
                 db.add(kyc_record)
             else:
                 current_kyc.target_level = target_tier.value
-                current_kyc.updated_at = datetime.utcnow()
+                current_kyc.updated_at = datetime.now(timezone.utc)
             await db.commit()
             kyc_process = {
                 "kyc_id": str(current_kyc.id if current_kyc else kyc_record.id),
@@ -320,7 +320,7 @@ class KYCService:
                 "completed_steps": list(completed_verifications),
                 "estimated_completion_time": len(required_steps) * 5,
                 "transaction_limits": tier_config["transaction_limits"],
-                "initiated_at": datetime.utcnow().isoformat(),
+                "initiated_at": datetime.now(timezone.utc).isoformat(),
             }
             logger.info(
                 f"KYC process initiated for user {user_id}, target tier: {target_tier.value}"
@@ -340,7 +340,7 @@ class KYCService:
     ) -> DocumentVerificationResult:
         """Verify uploaded document using OCR and validation"""
         try:
-            start_time = datetime.utcnow()
+            start_time = datetime.now(timezone.utc)
             document_id = str(uuid4())
             encrypted_document = await self.encryption_service.encrypt_data(
                 document_data
@@ -366,9 +366,10 @@ class KYCService:
             expires_at = None
             if document_type in self.document_validity_periods:
                 expires_at = (
-                    datetime.utcnow() + self.document_validity_periods[document_type]
+                    datetime.now(timezone.utc)
+                    + self.document_validity_periods[document_type]
                 )
-            processing_time = (datetime.utcnow() - start_time).total_seconds()
+            processing_time = (datetime.now(timezone.utc) - start_time).total_seconds()
             verification_result = DocumentVerificationResult(
                 document_id=document_id,
                 document_type=document_type,
@@ -378,7 +379,7 @@ class KYCService:
                 verification_checks=verification_checks,
                 risk_indicators=risk_indicators,
                 processing_time=processing_time,
-                verified_at=datetime.utcnow(),
+                verified_at=datetime.now(timezone.utc),
                 expires_at=expires_at,
             )
             await self._store_document_verification(
@@ -430,7 +431,7 @@ class KYCService:
                 quality_score=quality_score,
                 is_match=is_match,
                 risk_indicators=risk_indicators,
-                verified_at=datetime.utcnow(),
+                verified_at=datetime.now(timezone.utc),
             )
             await self._store_biometric_verification(
                 db, user_id, verification_result, selfie_data
@@ -492,7 +493,7 @@ class KYCService:
             tier_config = self.tier_requirements.get(
                 kyc_level, self.tier_requirements[KYCTier.BASIC]
             )
-            next_review_date = datetime.utcnow() + timedelta(
+            next_review_date = datetime.now(timezone.utc) + timedelta(
                 days=tier_config["review_frequency_days"]
             )
             ongoing_monitoring = await self._create_monitoring_plan(
@@ -514,7 +515,7 @@ class KYCService:
                 ongoing_monitoring=ongoing_monitoring,
                 recommendations=recommendations,
                 next_review_date=next_review_date,
-                assessed_at=datetime.utcnow(),
+                assessed_at=datetime.now(timezone.utc),
             )
             await self._store_kyc_assessment(db, assessment)
             if kyc_record:
@@ -522,7 +523,7 @@ class KYCService:
                 kyc_record.risk_level = risk_rating.value
                 kyc_record.compliance_score = compliance_score
                 kyc_record.next_review_date = next_review_date
-                kyc_record.updated_at = datetime.utcnow()
+                kyc_record.updated_at = datetime.now(timezone.utc)
                 await db.commit()
             logger.info(
                 f"Comprehensive KYC assessment completed for user {user_id}: Level: {kyc_level.value}, Status: {overall_status.value}, Risk: {risk_rating.value}, Score: {compliance_score:.2f}"
@@ -577,7 +578,7 @@ class KYCService:
                 expiry_date = datetime.strptime(
                     extracted_data["expiry_date"], "%Y-%m-%d"
                 )
-                checks["not_expired"] = expiry_date > datetime.utcnow()
+                checks["not_expired"] = expiry_date > datetime.now(timezone.utc)
             except:
                 checks["not_expired"] = False
         if metadata.get("image_quality", 1.0) < 0.7:
@@ -650,7 +651,7 @@ class KYCService:
             "checked": True,
             "match_found": False,
             "lists_checked": ["OFAC", "UN", "EU", "HMT"],
-            "last_checked": datetime.utcnow().isoformat(),
+            "last_checked": datetime.now(timezone.utc).isoformat(),
             "confidence": 0.99,
         }
 
@@ -660,7 +661,7 @@ class KYCService:
             "checked": True,
             "is_pep": False,
             "pep_category": None,
-            "last_checked": datetime.utcnow().isoformat(),
+            "last_checked": datetime.now(timezone.utc).isoformat(),
             "confidence": 0.95,
         }
 
@@ -670,7 +671,7 @@ class KYCService:
             "checked": True,
             "adverse_findings": False,
             "sources_checked": 50,
-            "last_checked": datetime.utcnow().isoformat(),
+            "last_checked": datetime.now(timezone.utc).isoformat(),
             "confidence": 0.9,
         }
 
@@ -680,7 +681,7 @@ class KYCService:
             "verified": True,
             "verification_method": "document_upload",
             "confidence": 0.88,
-            "last_verified": datetime.utcnow().isoformat(),
+            "last_verified": datetime.now(timezone.utc).isoformat(),
         }
 
     async def _verify_source_of_funds(
@@ -691,7 +692,7 @@ class KYCService:
             "verified": False,
             "documentation_provided": False,
             "risk_assessment": "medium",
-            "last_checked": datetime.utcnow().isoformat(),
+            "last_checked": datetime.now(timezone.utc).isoformat(),
         }
 
     async def _get_document_verifications(

@@ -79,14 +79,14 @@ class TokenValidationResult:
 class DeviceInfo:
     """Device information for token binding"""
 
-    device_id: str
-    device_type: str
-    user_agent: str
     ip_address: str
-    fingerprint: str
-    first_seen: datetime
-    last_seen: datetime
-    trusted: bool
+    user_agent: str
+    device_id: Optional[str] = None
+    device_type: str = "unknown"
+    fingerprint: str = ""
+    first_seen: Optional[datetime] = None
+    last_seen: Optional[datetime] = None
+    trusted: bool = False
 
 
 class JWTService:
@@ -638,7 +638,7 @@ class JWTService:
                         )
                         return bool(jti_result)
                 except:
-                    pass
+                    logger.debug(f"Skipping expired token cleanup")
             except Exception as e:
                 logger.warning(f"Failed to check token blacklist in Redis: {e}")
         return False

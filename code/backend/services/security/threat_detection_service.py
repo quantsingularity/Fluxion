@@ -228,8 +228,8 @@ class ThreatDetectionService:
             auth_header = request.headers.get("authorization")
             if auth_header and auth_header.startswith("Bearer "):
                 return "authenticated_user"
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Non-critical error in threat detection: {e}")
         return None
 
     async def _detect_rule_based_threats(

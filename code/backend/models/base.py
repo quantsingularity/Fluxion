@@ -78,7 +78,7 @@ class SoftDeleteMixin:
     def soft_delete(self) -> None:
         """Mark record as deleted"""
         self.is_deleted = True
-        self.deleted_at = datetime.utcnow()
+        self.deleted_at = datetime.now(timezone.utc)
 
     def restore(self) -> None:
         """Restore soft deleted record"""
@@ -126,8 +126,8 @@ class EncryptedMixin:
                     try:
                         decrypted_value = encryption_service.decrypt(value)
                         setattr(self, field_name, decrypted_value)
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        logger.warning(f"Failed to decrypt field {field_name}: {e}")
 
 
 class MetadataMixin:
@@ -185,6 +185,6 @@ class ComplianceMixin:
     ) -> None:
         """Update compliance status"""
         self.compliance_status = status
-        self.compliance_checked_at = datetime.utcnow()
+        self.compliance_checked_at = datetime.now(timezone.utc)
         if notes:
             self.compliance_notes = notes

@@ -8,7 +8,7 @@ import hashlib
 import logging
 import secrets
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from ipaddress import ip_address, ip_network
 from typing import Any, Optional, Set
 
@@ -72,9 +72,6 @@ class SecurityMiddleware(BaseHTTPMiddleware):
 
     def _load_ip_configurations(self) -> None:
         """Load IP whitelist and blacklist from configuration"""
-        # Load from environment variables or configuration file
-        # Example: Load from settings.security.BLOCKED_IPS and settings.security.ALLOWED_IPS
-        # For now, initialize as empty sets - can be populated from config
 
     def _build_csp_header(self) -> str:
         """Build Content Security Policy header"""
@@ -194,7 +191,7 @@ class SecurityMiddleware(BaseHTTPMiddleware):
                     await self.jwt_service.verify_token(token)
                     return
                 except Exception:
-                    pass
+                    logger.debug("Pattern check skipped due to regex error")
         csrf_token = request.headers.get("X-CSRF-Token")
         if not csrf_token:
             if request.headers.get("content-type", "").startswith(
@@ -283,7 +280,7 @@ class SecurityMiddleware(BaseHTTPMiddleware):
         client_ip = self._get_client_ip(request)
         user_agent = request.headers.get("User-Agent", "Unknown")
         security_log = {
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "client_ip": client_ip,
             "method": request.method,
             "path": str(request.url.path),

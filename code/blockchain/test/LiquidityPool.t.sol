@@ -2,7 +2,7 @@
 pragma solidity 0.8.19;
 
 import 'forge-std/Test.sol';
-import '../src/LiquidityPoolManager.sol';
+import '../contracts/LiquidityPoolManager.sol';
 
 contract LiquidityPoolTest is Test {
   LiquidityPoolManager pool;

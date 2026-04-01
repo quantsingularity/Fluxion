@@ -6,7 +6,7 @@ and predictive insights for DeFi and supply chain operations.
 
 import logging
 from dataclasses import asdict, dataclass
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict, List, Optional
@@ -211,10 +211,10 @@ class AdvancedAnalyticsService:
                 sector_allocation=sector_allocation,
                 performance_attribution=performance_attribution,
                 risk_metrics=risk_metrics,
-                calculated_at=datetime.utcnow(),
+                calculated_at=datetime.now(timezone.utc),
             )
             self._metrics_cache[cache_key] = analytics
-            self._cache_timestamps[cache_key] = datetime.utcnow()
+            self._cache_timestamps[cache_key] = datetime.now(timezone.utc)
             logger.info(
                 f"Portfolio analytics calculated for {portfolio_id}: Return: {annualized_return:.2%}, Sharpe: {sharpe_ratio:.2f}"
             )
@@ -233,7 +233,7 @@ class AdvancedAnalyticsService:
             cache_key = f"market_analytics_{timeframe.value}"
             if self._is_cache_valid(cache_key):
                 return self._metrics_cache[cache_key]
-            end_time = datetime.utcnow()
+            end_time = datetime.now(timezone.utc)
             if timeframe == TimeFrame.DAILY:
                 start_time = end_time - timedelta(days=1)
             elif timeframe == TimeFrame.WEEKLY:
@@ -286,10 +286,10 @@ class AdvancedAnalyticsService:
                 market_volatility=market_volatility,
                 price_impact_analysis=price_impact_analysis,
                 arbitrage_opportunities=arbitrage_opportunities,
-                calculated_at=datetime.utcnow(),
+                calculated_at=datetime.now(timezone.utc),
             )
             self._metrics_cache[cache_key] = analytics
-            self._cache_timestamps[cache_key] = datetime.utcnow()
+            self._cache_timestamps[cache_key] = datetime.now(timezone.utc)
             logger.info(
                 f"Market analytics calculated: Volume: ${volume_metrics.total_volume or 0}, Users: {volume_metrics.active_users or 0}"
             )
@@ -304,14 +304,14 @@ class AdvancedAnalyticsService:
             cache_key = "real_time_metrics"
             if self._is_cache_valid(cache_key, ttl=30):
                 return self._metrics_cache[cache_key]
-            five_minutes_ago = datetime.utcnow() - timedelta(minutes=5)
+            five_minutes_ago = datetime.now(timezone.utc) - timedelta(minutes=5)
             active_users_result = await db.execute(
                 select(func.count(func.distinct(Transaction.user_id))).where(
                     Transaction.created_at >= five_minutes_ago
                 )
             )
             active_users = active_users_result.scalar() or 0
-            one_minute_ago = datetime.utcnow() - timedelta(minutes=1)
+            one_minute_ago = datetime.now(timezone.utc) - timedelta(minutes=1)
             tps_result = await db.execute(
                 select(func.count(Transaction.id)).where(
                     and_(
@@ -344,10 +344,10 @@ class AdvancedAnalyticsService:
                 api_response_time_ms=api_response_time_ms,
                 error_rate_percent=error_rate_percent,
                 uptime_percent=uptime_percent,
-                timestamp=datetime.utcnow(),
+                timestamp=datetime.now(timezone.utc),
             )
             self._metrics_cache[cache_key] = metrics
-            self._cache_timestamps[cache_key] = datetime.utcnow()
+            self._cache_timestamps[cache_key] = datetime.now(timezone.utc)
             return metrics
         except Exception as e:
             logger.error(f"Real-time metrics calculation failed: {str(e)}")
@@ -365,7 +365,7 @@ class AdvancedAnalyticsService:
             report = {
                 "report_type": report_type,
                 "timeframe": timeframe.value,
-                "generated_at": datetime.utcnow().isoformat(),
+                "generated_at": datetime.now(timezone.utc).isoformat(),
                 "summary": {},
                 "metrics": {},
                 "insights": [],
@@ -412,7 +412,7 @@ class AdvancedAnalyticsService:
         if cache_key not in self._cache_timestamps:
             return False
         cache_age = (
-            datetime.utcnow() - self._cache_timestamps[cache_key]
+            datetime.now(timezone.utc) - self._cache_timestamps[cache_key]
         ).total_seconds()
         return cache_age < (ttl or self.cache_ttl)
 
@@ -420,7 +420,7 @@ class AdvancedAnalyticsService:
         self, db: AsyncSession, portfolio_id: UUID, timeframe: TimeFrame
     ) -> List[Transaction]:
         """Get portfolio transactions for analysis"""
-        end_time = datetime.utcnow()
+        end_time = datetime.now(timezone.utc)
         if timeframe == TimeFrame.DAILY:
             start_time = end_time - timedelta(days=30)
         elif timeframe == TimeFrame.WEEKLY:
@@ -708,7 +708,7 @@ class AdvancedAnalyticsService:
         self, db: AsyncSession, timeframe: TimeFrame
     ) -> float:
         """Calculate overall market volatility"""
-        end_time = datetime.utcnow()
+        end_time = datetime.now(timezone.utc)
         start_time = end_time - timedelta(days=30)
         result = await db.execute(
             select(
@@ -776,7 +776,8 @@ class AdvancedAnalyticsService:
         """Calculate network congestion score"""
         recent_tx_count = await db.execute(
             select(func.count(Transaction.id)).where(
-                Transaction.created_at >= datetime.utcnow() - timedelta(minutes=10)
+                Transaction.created_at
+                >= datetime.now(timezone.utc) - timedelta(minutes=10)
             )
         )
         tx_count = recent_tx_count.scalar() or 0

@@ -3,7 +3,7 @@ Comprehensive test suite for risk management services
 Tests all risk assessment, monitoring, and mitigation functionality
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from typing import Any
 from unittest.mock import AsyncMock, patch
@@ -53,7 +53,7 @@ class TestRiskManagementService:
             last_name="Doe",
             country="US",
             risk_tolerance="medium",
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc),
         )
 
     @pytest.fixture
@@ -64,7 +64,7 @@ class TestRiskManagementService:
             user_id=sample_user.id,
             name="Test Portfolio",
             total_value=Decimal("100000.00"),
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc),
         )
 
     @pytest.fixture
@@ -105,7 +105,7 @@ class TestRiskManagementService:
                 price=Decimal("40000.00"),
                 usd_value=Decimal("40000.00"),
                 status=TransactionStatus.CONFIRMED,
-                created_at=datetime.utcnow() - timedelta(days=1),
+                created_at=datetime.now(timezone.utc) - timedelta(days=1),
             ),
             Transaction(
                 id=uuid4(),
@@ -117,7 +117,7 @@ class TestRiskManagementService:
                 price=Decimal("2500.00"),
                 usd_value=Decimal("25000.00"),
                 status=TransactionStatus.CONFIRMED,
-                created_at=datetime.utcnow() - timedelta(hours=12),
+                created_at=datetime.now(timezone.utc) - timedelta(hours=12),
             ),
         ]
 
@@ -254,7 +254,7 @@ class TestRiskManagementService:
                 asset_allocation={"BTC": 0.6, "ETH": 0.4},
                 concentration_risk=0.3,
                 risk_level=RiskLevel.MEDIUM,
-                calculated_at=datetime.utcnow(),
+                calculated_at=datetime.now(timezone.utc),
             )
             mock_market_risk.return_value = MarketRisk(
                 portfolio_id=str(sample_portfolio.id),
@@ -263,7 +263,7 @@ class TestRiskManagementService:
                 volatility_risk=0.25,
                 trend_risk=0.4,
                 sector_risk=0.2,
-                calculated_at=datetime.utcnow(),
+                calculated_at=datetime.now(timezone.utc),
             )
             mock_credit_risk.return_value = CreditRisk(
                 user_id=str(sample_user.id),
@@ -272,7 +272,7 @@ class TestRiskManagementService:
                 debt_ratio=0.3,
                 payment_history_score=0.95,
                 risk_grade="B",
-                calculated_at=datetime.utcnow(),
+                calculated_at=datetime.now(timezone.utc),
             )
             mock_liquidity_risk.return_value = LiquidityRisk(
                 portfolio_id=str(sample_portfolio.id),
@@ -280,7 +280,7 @@ class TestRiskManagementService:
                 time_to_liquidate=2.5,
                 price_impact=0.03,
                 asset_liquidity={"BTC": 0.9, "ETH": 0.85},
-                calculated_at=datetime.utcnow(),
+                calculated_at=datetime.now(timezone.utc),
             )
             mock_operational_risk.return_value = OperationalRisk(
                 user_id=str(sample_user.id),
@@ -288,7 +288,7 @@ class TestRiskManagementService:
                 fraud_risk=0.05,
                 compliance_risk=0.08,
                 operational_score=0.92,
-                calculated_at=datetime.utcnow(),
+                calculated_at=datetime.now(timezone.utc),
             )
             assessment = await risk_service.perform_comprehensive_assessment(
                 mock_db_session, sample_user.id, sample_portfolio.id
@@ -329,7 +329,7 @@ class TestRiskManagementService:
             asset_allocation={"BTC": 0.8, "ETH": 0.2},
             concentration_risk=0.5,
             risk_level=RiskLevel.HIGH,
-            calculated_at=datetime.utcnow(),
+            calculated_at=datetime.now(timezone.utc),
         )
         with patch.object(
             risk_service, "calculate_portfolio_risk"
@@ -399,7 +399,7 @@ class TestRiskManagementService:
                 "Consider diversifying portfolio to reduce concentration risk",
                 "Monitor market volatility closely",
             ],
-            assessed_at=datetime.utcnow(),
+            assessed_at=datetime.now(timezone.utc),
         )
         with patch.object(
             risk_service, "perform_comprehensive_assessment"
@@ -525,7 +525,7 @@ class TestRiskManagementService:
             asset_allocation={"BTC": 0.9, "ETH": 0.1},
             concentration_risk=0.8,
             risk_level=RiskLevel.HIGH,
-            calculated_at=datetime.utcnow(),
+            calculated_at=datetime.now(timezone.utc),
         )
         suggestions = risk_service.generate_mitigation_suggestions(portfolio_risk)
         assert len(suggestions) > 0

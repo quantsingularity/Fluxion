@@ -464,7 +464,7 @@ class EncryptionService:
         """Encrypt JWT token"""
         payload["exp"] = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
         payload["iat"] = datetime.now(timezone.utc)
-        token = jwt.encode(payload, self.master_key, algorithm="HS256")
+        token = jwt.encode(payload, self.master_key.hex(), algorithm="HS256")
         encrypted_token = self.fernet.encrypt(token.encode("utf-8"))
         return base64.urlsafe_b64encode(encrypted_token).decode("ascii")
 
@@ -474,7 +474,7 @@ class EncryptionService:
             encrypted_bytes = base64.urlsafe_b64decode(encrypted_token.encode("ascii"))
             token_bytes = self.fernet.decrypt(encrypted_bytes)
             token = token_bytes.decode("utf-8")
-            payload = jwt.decode(token, self.master_key, algorithms=["HS256"])
+            payload = jwt.decode(token, self.master_key.hex(), algorithms=["HS256"])
             return payload
         except Exception as e:
             logger.warning(f"Token decryption failed: {e}")
