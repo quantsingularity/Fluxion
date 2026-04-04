@@ -1,15 +1,24 @@
 output "db_endpoint" {
-  description = "Endpoint of the database"
+  description = "RDS instance endpoint"
   value       = aws_db_instance.main.endpoint
 }
 
+output "db_address" {
+  description = "RDS instance hostname"
+  value       = aws_db_instance.main.address
+}
+
+output "db_port" {
+  description = "RDS instance port"
+  value       = aws_db_instance.main.port
+}
+
 output "db_name" {
-  description = "Name of the database"
+  description = "Database name"
   value       = aws_db_instance.main.db_name
 }
 
-output "db_username" {
-  description = "Username of the database"
-  value       = aws_db_instance.main.username
-  sensitive   = true
+output "db_arn" {
+  description = "RDS instance ARN"
+  value       = aws_db_instance.main.arn
 }

@@ -2,12 +2,11 @@
 appName: fluxion
 environment: prod
 
-# Backend configuration
 backend:
   replicas: 5
   image:
     repository: registry.example.com/app/backend
-    tag: production
+    tag: v1.0.0
     pullPolicy: Always
   containerPort: 3000
   servicePort: 80
@@ -18,16 +17,12 @@ backend:
     requests:
       cpu: 1000m
       memory: 1Gi
-  apiUrl: http://app-backend
-  jwtSecret: prod-jwt-secret
-  apiKey: prod-api-key
 
-# Frontend configuration
 frontend:
   replicas: 5
   image:
     repository: registry.example.com/app/frontend
-    tag: production
+    tag: v1.0.0
     pullPolicy: Always
   containerPort: 80
   servicePort: 80
@@ -42,20 +37,17 @@ frontend:
       cpu: 500m
       memory: 512Mi
 
-# Database configuration
 database:
-  replicas: 3
+  replicas: 1
   image:
     repository: mysql
-    tag: 8.0
+    tag: "8.0"
     pullPolicy: IfNotPresent
   containerPort: 3306
   servicePort: 3306
   name: fluxiondb
   user: appuser
-  password: prod-password
-  rootPassword: prod-root-password
-  url: mysql://appuser:prod-password@app-database:3306/appdb
+  # passwords sourced from Kubernetes Secrets / ExternalSecrets, NOT stored here
   storageClass: premium-rwo
   storage: 50Gi
   resources:
@@ -66,12 +58,11 @@ database:
       cpu: 2000m
       memory: 4Gi
 
-# Redis configuration
 redis:
-  replicas: 3
+  replicas: 1
   image:
     repository: redis
-    tag: 6.2
+    tag: "7-alpine"
     pullPolicy: IfNotPresent
   containerPort: 6379
   servicePort: 6379
@@ -85,7 +76,6 @@ redis:
       cpu: 500m
       memory: 1Gi
 
-# Ingress configuration
 ingress:
   host: fluxion.example.com
   class: nginx
@@ -93,6 +83,5 @@ ingress:
   certManager:
     issuer: letsencrypt-prod
 
-# General configuration
 logLevel: warn
 imagePullSecrets: regcred

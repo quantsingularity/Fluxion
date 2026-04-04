@@ -1,22 +1,22 @@
 variable "environment" {
-  description = "Environment name (dev, staging, prod)"
+  description = "Environment name"
   type        = string
 }
 
 variable "vpc_id" {
-  description = "ID of the VPC"
+  description = "VPC ID"
   type        = string
 }
 
 variable "private_subnet_ids" {
-  description = "IDs of the private subnets"
+  description = "Private subnet IDs"
   type        = list(string)
 }
 
 variable "db_instance_class" {
   description = "RDS instance class"
   type        = string
-  default     = "db.t3.micro"
+  default     = "db.t3.medium"
 }
 
 variable "db_name" {
@@ -25,38 +25,37 @@ variable "db_name" {
 }
 
 variable "db_username" {
-  description = "Database username"
+  description = "Database master username"
   type        = string
   sensitive   = true
 }
 
 variable "db_password" {
-  description = "Database password"
+  description = "Database master password"
   type        = string
   sensitive   = true
 }
 
 variable "security_group_ids" {
-  description = "List of security group IDs"
+  description = "Security group IDs"
   type        = list(string)
 }
 
 variable "kms_key_id" {
-  description = "KMS key ID for RDS encryption"
+  description = "KMS key ARN for encryption"
   type        = string
-  default     = null
 }
 
 variable "allocated_storage" {
-  description = "Allocated storage for RDS instance (GB)"
+  description = "Initial allocated storage in GB"
   type        = number
-  default     = 100
+  default     = 20
 }
 
 variable "max_allocated_storage" {
-  description = "Maximum allocated storage for RDS instance (GB)"
+  description = "Maximum allocated storage in GB for autoscaling"
   type        = number
-  default     = 1000
+  default     = 100
 }
 
 variable "backup_retention_period" {
@@ -66,21 +65,21 @@ variable "backup_retention_period" {
 }
 
 variable "backup_window" {
-  description = "Backup window"
+  description = "Preferred backup window"
   type        = string
   default     = "03:00-04:00"
 }
 
 variable "maintenance_window" {
-  description = "Maintenance window"
+  description = "Preferred maintenance window"
   type        = string
   default     = "sun:04:00-sun:05:00"
 }
 
 variable "multi_az" {
-  description = "Enable multi-AZ deployment"
+  description = "Enable Multi-AZ"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "deletion_protection" {
@@ -104,17 +103,17 @@ variable "copy_tags_to_snapshot" {
 variable "performance_insights" {
   description = "Enable Performance Insights"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "monitoring_interval" {
-  description = "Enhanced monitoring interval in seconds"
+  description = "Enhanced monitoring interval in seconds (0 to disable)"
   type        = number
-  default     = 60
+  default     = 0
 }
 
 variable "common_tags" {
-  description = "Common tags to apply to all resources"
+  description = "Common tags"
   type        = map(string)
   default     = {}
 }

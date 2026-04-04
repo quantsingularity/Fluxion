@@ -1,25 +1,54 @@
-variable "vpc_cidr" {
-  description = "CIDR block for the VPC"
+variable "environment" {
+  description = "Environment name"
   type        = string
-  default     = "10.0.0.0/16"
+}
+
+variable "vpc_cidr" {
+  description = "VPC CIDR block"
+  type        = string
 }
 
 variable "availability_zones" {
-  description = "List of availability zones"
+  description = "Availability zones"
   type        = list(string)
 }
 
 variable "public_subnet_cidrs" {
-  description = "CIDR blocks for public subnets"
+  description = "Public subnet CIDR blocks"
   type        = list(string)
 }
 
 variable "private_subnet_cidrs" {
-  description = "CIDR blocks for private subnets"
+  description = "Private subnet CIDR blocks"
   type        = list(string)
 }
 
-variable "environment" {
-  description = "Environment name (dev, staging, prod)"
+variable "enable_nat_gateway" {
+  description = "Enable NAT gateway"
+  type        = bool
+  default     = true
+}
+
+variable "enable_vpn_gateway" {
+  description = "Enable VPN gateway"
+  type        = bool
+  default     = false
+}
+
+variable "enable_flow_logs" {
+  description = "Enable VPC flow logs"
+  type        = bool
+  default     = true
+}
+
+variable "kms_key_id" {
+  description = "KMS key ARN for CloudWatch log encryption"
   type        = string
+  default     = null
+}
+
+variable "common_tags" {
+  description = "Common tags"
+  type        = map(string)
+  default     = {}
 }

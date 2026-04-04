@@ -19,14 +19,6 @@ resource "aws_security_group" "app" {
     description = "HTTPS"
   }
 
-  ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "SSH"
-  }
-
   egress {
     from_port   = 0
     to_port     = 0
@@ -35,9 +27,13 @@ resource "aws_security_group" "app" {
     description = "Allow all outbound traffic"
   }
 
-  tags = {
+  tags = merge(var.common_tags, {
     Name        = "${var.app_name}-${var.environment}-app-sg"
     Environment = var.environment
+  })
+
+  lifecycle {
+    create_before_destroy = true
   }
 }
 
@@ -51,7 +47,7 @@ resource "aws_security_group" "db" {
     to_port         = 3306
     protocol        = "tcp"
     security_groups = [aws_security_group.app.id]
-    description     = "MySQL from application"
+    description     = "MySQL from application tier only"
   }
 
   egress {
@@ -62,8 +58,43 @@ resource "aws_security_group" "db" {
     description = "Allow all outbound traffic"
   }
 
-  tags = {
+  tags = merge(var.common_tags, {
     Name        = "${var.app_name}-${var.environment}-db-sg"
     Environment = var.environment
+  })
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_security_group" "bastion" {
+  name        = "${var.app_name}-${var.environment}-bastion-sg"
+  description = "Security group for bastion host - SSH access restricted to known CIDRs"
+  vpc_id      = var.vpc_id
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = var.allowed_ssh_cidrs
+    description = "SSH from allowed CIDRs only"
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow all outbound"
+  }
+
+  tags = merge(var.common_tags, {
+    Name        = "${var.app_name}-${var.environment}-bastion-sg"
+    Environment = var.environment
+  })
+
+  lifecycle {
+    create_before_destroy = true
   }
 }

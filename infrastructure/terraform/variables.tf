@@ -1,6 +1,5 @@
 # Fluxion Infrastructure Variables - Enhanced for Financial Security
 
-# General Configuration
 variable "environment" {
   description = "Environment name (dev, staging, prod)"
   type        = string
@@ -22,7 +21,6 @@ variable "aws_region" {
   default     = "us-west-2"
 }
 
-# Tagging
 variable "default_tags" {
   description = "Default tags to apply to all resources"
   type        = map(string)
@@ -34,7 +32,6 @@ variable "default_tags" {
   }
 }
 
-# Security Configuration
 variable "assume_role_arn" {
   description = "ARN of the role to assume for cross-account access"
   type        = string
@@ -64,109 +61,82 @@ variable "enable_multi_region" {
   default     = false
 }
 
-# Terraform State Configuration
-variable "terraform_state_bucket" {
-  description = "S3 bucket for Terraform state"
-  type        = string
-}
-
-variable "terraform_state_kms_key" {
-  description = "KMS key for Terraform state encryption"
-  type        = string
-}
-
-variable "terraform_state_lock_table" {
-  description = "DynamoDB table for Terraform state locking"
-  type        = string
-}
-
-# Network Configuration
+# Network
 variable "vpc_cidr" {
-  description = "CIDR block for VPC"
+  description = "VPC CIDR block"
   type        = string
   default     = "10.0.0.0/16"
-  validation {
-    condition     = can(cidrhost(var.vpc_cidr, 0))
-    error_message = "VPC CIDR must be a valid IPv4 CIDR block."
-  }
 }
 
 variable "availability_zones" {
-  description = "List of availability zones"
+  description = "Availability zones"
   type        = list(string)
   default     = ["us-west-2a", "us-west-2b", "us-west-2c"]
 }
 
 variable "public_subnet_cidrs" {
-  description = "CIDR blocks for public subnets"
+  description = "Public subnet CIDR blocks"
   type        = list(string)
   default     = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
 }
 
 variable "private_subnet_cidrs" {
-  description = "CIDR blocks for private subnets"
+  description = "Private subnet CIDR blocks"
   type        = list(string)
-  default     = ["10.0.10.0/24", "10.0.20.0/24", "10.0.30.0/24"]
+  default     = ["10.0.4.0/24", "10.0.5.0/24", "10.0.6.0/24"]
 }
 
 variable "enable_nat_gateway" {
-  description = "Enable NAT Gateway for private subnets"
+  description = "Enable NAT gateway"
   type        = bool
   default     = true
 }
 
 variable "enable_vpn_gateway" {
-  description = "Enable VPN Gateway"
+  description = "Enable VPN gateway"
   type        = bool
   default     = false
 }
 
 variable "enable_flow_logs" {
-  description = "Enable VPC Flow Logs"
+  description = "Enable VPC flow logs"
   type        = bool
   default     = true
 }
 
-# Compute Configuration
+# Compute
 variable "instance_type" {
   description = "EC2 instance type"
   type        = string
   default     = "t3.medium"
-  validation {
-    condition = contains([
-      "t3.micro", "t3.small", "t3.medium", "t3.large", "t3.xlarge",
-      "m5.large", "m5.xlarge", "m5.2xlarge", "m5.4xlarge",
-      "c5.large", "c5.xlarge", "c5.2xlarge", "c5.4xlarge"
-    ], var.instance_type)
-    error_message = "Instance type must be a valid EC2 instance type."
-  }
 }
 
 variable "key_name" {
-  description = "EC2 Key Pair name"
+  description = "SSH key pair name"
   type        = string
+  default     = null
 }
 
 variable "asg_min_size" {
-  description = "Minimum size of Auto Scaling Group"
+  description = "Minimum ASG size"
+  type        = number
+  default     = 1
+}
+
+variable "asg_max_size" {
+  description = "Maximum ASG size"
+  type        = number
+  default     = 5
+}
+
+variable "asg_desired_capacity" {
+  description = "Desired ASG capacity"
   type        = number
   default     = 2
 }
 
-variable "asg_max_size" {
-  description = "Maximum size of Auto Scaling Group"
-  type        = number
-  default     = 10
-}
-
-variable "asg_desired_capacity" {
-  description = "Desired capacity of Auto Scaling Group"
-  type        = number
-  default     = 3
-}
-
 variable "enable_detailed_monitoring" {
-  description = "Enable detailed monitoring for EC2 instances"
+  description = "Enable detailed EC2 monitoring"
   type        = bool
   default     = true
 }
@@ -178,177 +148,106 @@ variable "enable_alb" {
 }
 
 variable "alb_certificate_arn" {
-  description = "ARN of SSL certificate for ALB"
+  description = "ACM certificate ARN for HTTPS"
   type        = string
   default     = null
 }
 
 variable "health_check_path" {
-  description = "Health check path for load balancer"
+  description = "Health check path"
   type        = string
   default     = "/health"
 }
 
-# Database Configuration
+# Database
 variable "db_instance_class" {
   description = "RDS instance class"
   type        = string
   default     = "db.t3.medium"
-  validation {
-    condition = contains([
-      "db.t3.micro", "db.t3.small", "db.t3.medium", "db.t3.large",
-      "db.r5.large", "db.r5.xlarge", "db.r5.2xlarge", "db.r5.4xlarge"
-    ], var.db_instance_class)
-    error_message = "Database instance class must be a valid RDS instance type."
-  }
 }
 
 variable "db_name" {
   description = "Database name"
   type        = string
-  default     = "fluxion"
+  default     = "fluxiondb"
 }
 
 variable "db_username" {
-  description = "Database username"
+  description = "Database master username"
   type        = string
-  default     = "fluxion_user"
+  default     = "fluxion_admin"
+  sensitive   = true
 }
 
 variable "db_password" {
-  description = "Database password"
+  description = "Database master password"
   type        = string
   sensitive   = true
 }
 
 variable "db_allocated_storage" {
-  description = "Allocated storage for RDS instance (GB)"
+  description = "Initial RDS storage in GB"
+  type        = number
+  default     = 20
+}
+
+variable "db_max_allocated_storage" {
+  description = "Maximum RDS storage in GB"
   type        = number
   default     = 100
 }
 
-variable "db_max_allocated_storage" {
-  description = "Maximum allocated storage for RDS instance (GB)"
-  type        = number
-  default     = 1000
-}
-
 variable "db_backup_retention_period" {
-  description = "Backup retention period in days"
+  description = "RDS backup retention in days"
   type        = number
-  default     = 30
-  validation {
-    condition     = var.db_backup_retention_period >= 7 && var.db_backup_retention_period <= 35
-    error_message = "Backup retention period must be between 7 and 35 days."
-  }
+  default     = 7
 }
 
 variable "db_backup_window" {
-  description = "Backup window"
+  description = "RDS backup window"
   type        = string
   default     = "03:00-04:00"
 }
 
 variable "db_maintenance_window" {
-  description = "Maintenance window"
+  description = "RDS maintenance window"
   type        = string
   default     = "sun:04:00-sun:05:00"
 }
 
 variable "db_multi_az" {
-  description = "Enable Multi-AZ deployment"
+  description = "Enable RDS Multi-AZ"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "db_deletion_protection" {
-  description = "Enable deletion protection"
+  description = "Enable RDS deletion protection"
   type        = bool
   default     = true
 }
 
 variable "db_skip_final_snapshot" {
-  description = "Skip final snapshot when deleting"
+  description = "Skip final RDS snapshot"
   type        = bool
   default     = false
 }
 
 variable "db_performance_insights" {
-  description = "Enable Performance Insights"
+  description = "Enable RDS Performance Insights"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "db_monitoring_interval" {
-  description = "Enhanced monitoring interval in seconds"
+  description = "RDS enhanced monitoring interval (0 to disable)"
   type        = number
-  default     = 60
-  validation {
-    condition     = contains([0, 1, 5, 10, 15, 30, 60], var.db_monitoring_interval)
-    error_message = "Monitoring interval must be one of: 0, 1, 5, 10, 15, 30, 60."
-  }
+  default     = 0
 }
 
-# Storage Configuration
-variable "enable_s3_versioning" {
-  description = "Enable S3 bucket versioning"
-  type        = bool
-  default     = true
-}
-
-variable "enable_s3_mfa_delete" {
-  description = "Enable S3 MFA delete"
-  type        = bool
-  default     = true
-}
-
-variable "s3_lifecycle_rules" {
-  description = "S3 lifecycle rules"
-  type = list(object({
-    id     = string
-    status = string
-    transitions = list(object({
-      days          = number
-      storage_class = string
-    }))
-    expiration = object({
-      days = number
-    })
-  }))
-  default = [
-    {
-      id     = "default"
-      status = "Enabled"
-      transitions = [
-        {
-          days          = 30
-          storage_class = "STANDARD_IA"
-        },
-        {
-          days          = 90
-          storage_class = "GLACIER"
-        },
-        {
-          days          = 365
-          storage_class = "DEEP_ARCHIVE"
-        }
-      ]
-      expiration = {
-        days = 2555 # 7 years for financial compliance
-      }
-    }
-  ]
-}
-
-variable "backup_retention_days" {
-  description = "Backup retention period in days"
-  type        = number
-  default     = 2555 # 7 years for financial compliance
-}
-
-# Security Services Configuration
+# Security
 variable "enable_guardduty" {
-  description = "Enable AWS GuardDuty"
+  description = "Enable GuardDuty"
   type        = bool
   default     = true
 }
@@ -360,31 +259,60 @@ variable "enable_config" {
 }
 
 variable "enable_cloudtrail" {
-  description = "Enable AWS CloudTrail"
+  description = "Enable CloudTrail"
   type        = bool
   default     = true
 }
 
 variable "enable_security_hub" {
-  description = "Enable AWS Security Hub"
+  description = "Enable Security Hub"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "enable_inspector" {
-  description = "Enable AWS Inspector"
+  description = "Enable Inspector"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "cloudtrail_s3_bucket" {
-  description = "S3 bucket for CloudTrail logs"
+  description = "S3 bucket for CloudTrail"
   type        = string
   default     = null
 }
 
 variable "config_s3_bucket" {
-  description = "S3 bucket for Config snapshots"
+  description = "S3 bucket for AWS Config"
   type        = string
   default     = null
+}
+
+# Storage
+variable "enable_s3_versioning" {
+  description = "Enable S3 versioning"
+  type        = bool
+  default     = true
+}
+
+variable "enable_s3_mfa_delete" {
+  description = "Enable S3 MFA delete"
+  type        = bool
+  default     = false
+}
+
+variable "s3_lifecycle_rules" {
+  description = "S3 lifecycle rules"
+  type = list(object({
+    id              = string
+    status          = string
+    expiration_days = number
+  }))
+  default = []
+}
+
+variable "backup_retention_days" {
+  description = "Backup retention days"
+  type        = number
+  default     = 90
 }

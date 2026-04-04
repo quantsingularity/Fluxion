@@ -3,10 +3,10 @@ resource "aws_vpc" "main" {
   enable_dns_support   = true
   enable_dns_hostnames = true
 
-  tags = {
+  tags = merge(var.common_tags, {
     Name        = "${var.environment}-vpc"
     Environment = var.environment
-  }
+  })
 }
 
 resource "aws_subnet" "public" {
@@ -14,12 +14,13 @@ resource "aws_subnet" "public" {
   vpc_id                  = aws_vpc.main.id
   cidr_block              = var.public_subnet_cidrs[count.index]
   availability_zone       = var.availability_zones[count.index]
-  map_public_ip_on_launch = true
+  map_public_ip_on_launch = false
 
-  tags = {
+  tags = merge(var.common_tags, {
     Name        = "${var.environment}-public-subnet-${count.index + 1}"
     Environment = var.environment
-  }
+    Tier        = "public"
+  })
 }
 
 resource "aws_subnet" "private" {
@@ -28,40 +29,43 @@ resource "aws_subnet" "private" {
   cidr_block        = var.private_subnet_cidrs[count.index]
   availability_zone = var.availability_zones[count.index]
 
-  tags = {
+  tags = merge(var.common_tags, {
     Name        = "${var.environment}-private-subnet-${count.index + 1}"
     Environment = var.environment
-  }
+    Tier        = "private"
+  })
 }
 
 resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id
 
-  tags = {
+  tags = merge(var.common_tags, {
     Name        = "${var.environment}-igw"
     Environment = var.environment
-  }
+  })
 }
 
 resource "aws_eip" "nat" {
-  count = length(var.public_subnet_cidrs)
-  vpc   = true
+  count  = var.enable_nat_gateway ? length(var.public_subnet_cidrs) : 0
+  domain = "vpc"
 
-  tags = {
+  tags = merge(var.common_tags, {
     Name        = "${var.environment}-nat-eip-${count.index + 1}"
     Environment = var.environment
-  }
+  })
+
+  depends_on = [aws_internet_gateway.main]
 }
 
 resource "aws_nat_gateway" "main" {
-  count         = length(var.public_subnet_cidrs)
+  count         = var.enable_nat_gateway ? length(var.public_subnet_cidrs) : 0
   allocation_id = aws_eip.nat[count.index].id
   subnet_id     = aws_subnet.public[count.index].id
 
-  tags = {
+  tags = merge(var.common_tags, {
     Name        = "${var.environment}-nat-gateway-${count.index + 1}"
     Environment = var.environment
-  }
+  })
 
   depends_on = [aws_internet_gateway.main]
 }
@@ -74,25 +78,28 @@ resource "aws_route_table" "public" {
     gateway_id = aws_internet_gateway.main.id
   }
 
-  tags = {
+  tags = merge(var.common_tags, {
     Name        = "${var.environment}-public-route-table"
     Environment = var.environment
-  }
+  })
 }
 
 resource "aws_route_table" "private" {
-  count  = length(var.private_subnet_cidrs)
+  count  = var.enable_nat_gateway ? length(var.private_subnet_cidrs) : 1
   vpc_id = aws_vpc.main.id
 
-  route {
-    cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.main[count.index].id
+  dynamic "route" {
+    for_each = var.enable_nat_gateway ? [1] : []
+    content {
+      cidr_block     = "0.0.0.0/0"
+      nat_gateway_id = aws_nat_gateway.main[count.index].id
+    }
   }
 
-  tags = {
+  tags = merge(var.common_tags, {
     Name        = "${var.environment}-private-route-table-${count.index + 1}"
     Environment = var.environment
-  }
+  })
 }
 
 resource "aws_route_table_association" "public" {
@@ -104,5 +111,64 @@ resource "aws_route_table_association" "public" {
 resource "aws_route_table_association" "private" {
   count          = length(var.private_subnet_cidrs)
   subnet_id      = aws_subnet.private[count.index].id
-  route_table_id = aws_route_table.private[count.index].id
+  route_table_id = var.enable_nat_gateway ? aws_route_table.private[count.index].id : aws_route_table.private[0].id
+}
+
+resource "aws_flow_log" "main" {
+  count           = var.enable_flow_logs ? 1 : 0
+  iam_role_arn    = aws_iam_role.flow_log[0].arn
+  log_destination = aws_cloudwatch_log_group.flow_log[0].arn
+  traffic_type    = "ALL"
+  vpc_id          = aws_vpc.main.id
+
+  tags = merge(var.common_tags, {
+    Name        = "${var.environment}-vpc-flow-logs"
+    Environment = var.environment
+  })
+}
+
+resource "aws_cloudwatch_log_group" "flow_log" {
+  count             = var.enable_flow_logs ? 1 : 0
+  name              = "/aws/vpc/flow-logs/${var.environment}"
+  retention_in_days = 90
+  kms_key_id        = var.kms_key_id
+
+  tags = var.common_tags
+}
+
+resource "aws_iam_role" "flow_log" {
+  count = var.enable_flow_logs ? 1 : 0
+  name  = "${var.environment}-vpc-flow-log-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action    = "sts:AssumeRole"
+      Effect    = "Allow"
+      Principal = { Service = "vpc-flow-logs.amazonaws.com" }
+    }]
+  })
+
+  tags = var.common_tags
+}
+
+resource "aws_iam_role_policy" "flow_log" {
+  count = var.enable_flow_logs ? 1 : 0
+  name  = "${var.environment}-vpc-flow-log-policy"
+  role  = aws_iam_role.flow_log[0].id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents",
+        "logs:DescribeLogGroups",
+        "logs:DescribeLogStreams"
+      ]
+      Effect   = "Allow"
+      Resource = "*"
+    }]
+  })
 }

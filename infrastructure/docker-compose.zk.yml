@@ -1,20 +1,64 @@
 version: "3.8"
 
+networks:
+  fluxion-network:
+    external: true
+
+volumes:
+  zk_data:
+    driver: local
+  redis_cluster_data:
+    driver: local
+
 services:
   zk-prover:
     image: matterlabs/zksync-era:latest
+    container_name: fluxion-zk-prover
+    restart: unless-stopped
     ports:
       - "3050:3050"
     environment:
       ZKSYNC_ENV: "production"
     volumes:
       - zk_data:/data
+    networks:
+      - fluxion-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3050/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    security_opt:
+      - no-new-privileges:true
 
   redis-cluster:
-    image: redis/redis-stack-server:7.2
+    image: redis/redis-stack-server:7.2.0-v9
+    container_name: fluxion-redis-cluster
+    restart: unless-stopped
     ports:
-      - "6379:6379"
-    command: redis-stack-server --loadmodule /opt/redis-stack/lib/redisbloom.so
-
-volumes:
-  zk_data:
+      - "6380:6379"
+    volumes:
+      - redis_cluster_data:/data
+    command: >
+      redis-stack-server
+      --requirepass ${REDIS_PASSWORD:-secure_redis_password}
+      --appendonly yes
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+    networks:
+      - fluxion-network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "redis-cli",
+          "-a",
+          "${REDIS_PASSWORD:-secure_redis_password}",
+          "ping",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    security_opt:
+      - no-new-privileges:true

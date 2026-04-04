@@ -1,0 +1,57 @@
+filebeat.inputs:
+  - type: log
+    enabled: true
+    paths:
+      - /var/log/app/*.log
+    fields:
+      service: fluxion-app
+      environment: production
+    fields_under_root: true
+    multiline.pattern: '^\d{4}-\d{2}-\d{2}'
+    multiline.negate: true
+    multiline.match: after
+
+  - type: log
+    enabled: true
+    paths:
+      - /var/log/audit/*.log
+    fields:
+      service: fluxion-audit
+      environment: production
+      log_type: audit
+    fields_under_root: true
+
+  - type: container
+    enabled: true
+    paths:
+      - /var/lib/docker/containers/*/*.log
+    processors:
+      - add_docker_metadata:
+          host: "unix:///var/run/docker.sock"
+
+processors:
+  - add_host_metadata:
+      when.not.contains.tags: forwarded
+  - add_cloud_metadata: ~
+  - drop_fields:
+      fields: ["agent.ephemeral_id", "agent.hostname"]
+      ignore_missing: true
+
+output.elasticsearch:
+  hosts: ["${ELASTICSEARCH_HOSTS}"]
+  username: "${ELASTICSEARCH_USERNAME}"
+  password: "${ELASTICSEARCH_PASSWORD}"
+  index: "fluxion-%{[fields.service]:generic}-%{+yyyy.MM.dd}"
+  ssl.verification_mode: none
+
+setup.ilm.enabled: true
+setup.ilm.rollover_alias: "fluxion"
+setup.ilm.pattern: "{now/d}-000001"
+
+setup.kibana:
+  host: "kibana:5601"
+  username: "${ELASTICSEARCH_USERNAME}"
+  password: "${ELASTICSEARCH_PASSWORD}"
+
+logging.level: warning
+logging.to_files: false

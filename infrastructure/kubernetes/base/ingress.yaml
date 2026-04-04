@@ -3,17 +3,27 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: fluxion-ingress
+  namespace: default
+  labels:
+    app: fluxion
   annotations:
-    kubernetes.io/ingress.class: nginx
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
-    cert-manager.io/cluster-issuer: letsencrypt-staging
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "10"
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      more_set_headers "X-Frame-Options: SAMEORIGIN";
+      more_set_headers "X-Content-Type-Options: nosniff";
+      more_set_headers "Referrer-Policy: strict-origin-when-cross-origin";
 spec:
+  ingressClassName: nginx
   tls:
     - hosts:
-        - dev.fluxion.example.com
+        - fluxion.example.com
       secretName: fluxion-tls
   rules:
-    - host: dev.fluxion.example.com
+    - host: fluxion.example.com
       http:
         paths:
           - path: /api

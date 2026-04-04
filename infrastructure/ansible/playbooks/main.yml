@@ -1,15 +1,20 @@
 ---
 # main.yml - Main playbook that includes all other playbooks
+- name: Apply security hardening to all hosts
+  hosts: all
+  become: true
+  roles:
+    - common
+    - security
+
 - name: Configure web servers
   hosts: webservers
   become: true
   roles:
-    - common
     - webserver
 
 - name: Configure database servers
   hosts: databases
   become: true
   roles:
-    - common
     - database

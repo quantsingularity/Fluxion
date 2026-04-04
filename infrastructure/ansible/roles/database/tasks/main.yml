@@ -18,6 +18,7 @@
       - python3-pymysql
       - mariadb-backup
     state: present
+    update_cache: yes
   when: ansible_os_family == "Debian"
 
 - name: Configure MariaDB with security hardening
@@ -72,6 +73,7 @@
     state: absent
     login_user: root
     login_password: "{{ db_root_password }}"
+  no_log: true
 
 - name: Remove test database
   mysql_db:
@@ -79,6 +81,7 @@
     state: absent
     login_user: root
     login_password: "{{ db_root_password }}"
+  no_log: true
 
 - name: Disallow root login remotely
   mysql_user:
@@ -89,10 +92,10 @@
     login_password: "{{ db_root_password }}"
   loop:
     - "{{ ansible_hostname }}"
-    - 127.0.0.1
-    - ::1
-    - localhost
+    - "127.0.0.1"
+    - "::1"
   ignore_errors: yes
+  no_log: true
 
 - name: Create application database
   mysql_db:
@@ -102,16 +105,18 @@
     collation: utf8mb4_unicode_ci
     login_user: root
     login_password: "{{ db_root_password }}"
+  no_log: true
 
 - name: Create application database user
   mysql_user:
     name: "{{ db_user }}"
     password: "{{ db_password }}"
     priv: "{{ db_name }}.*:SELECT,INSERT,UPDATE,DELETE,CREATE,DROP,INDEX,ALTER,CREATE TEMPORARY TABLES,LOCK TABLES"
-    host: "{{ db_allowed_hosts | default(['localhost', '127.0.0.1']) }}"
+    host: "{{ item }}"
     state: present
     login_user: root
     login_password: "{{ db_root_password }}"
+  loop: "{{ db_allowed_hosts | default(['localhost', '127.0.0.1']) }}"
   no_log: true
 
 - name: Create backup user
@@ -124,6 +129,25 @@
     login_user: root
     login_password: "{{ db_root_password }}"
   no_log: true
+
+- name: Create database monitoring user
+  mysql_user:
+    name: "{{ db_monitor_user | default('monitor') }}"
+    password: "{{ db_monitor_password }}"
+    priv: "*.*:PROCESS,REPLICATION CLIENT"
+    host: localhost
+    state: present
+    login_user: root
+    login_password: "{{ db_root_password }}"
+  no_log: true
+
+- name: Create backup script directory
+  file:
+    path: /opt/fluxion/bin
+    state: directory
+    owner: fluxion
+    group: fluxion
+    mode: "0755"
 
 - name: Create database backup directory
   file:
@@ -140,14 +164,6 @@
     owner: fluxion
     group: fluxion
     mode: "0750"
-
-- name: Create backup script directory
-  file:
-    path: /opt/fluxion/bin
-    state: directory
-    owner: fluxion
-    group: fluxion
-    mode: "0755"
 
 - name: Schedule database backups
   cron:
@@ -175,14 +191,3 @@
     src: "{{ item }}"
   loop: "{{ db_firewall_sources | default(['127.0.0.1']) }}"
   when: ansible_os_family == "Debian"
-
-- name: Configure database monitoring user
-  mysql_user:
-    name: "{{ db_monitor_user | default('monitor') }}"
-    password: "{{ db_monitor_password }}"
-    priv: "*.*:PROCESS,REPLICATION CLIENT"
-    host: localhost
-    state: present
-    login_user: root
-    login_password: "{{ db_root_password }}"
-  no_log: true

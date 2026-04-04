@@ -1,25 +1,39 @@
 ---
-# roles/webserver/tasks/main.yml
-- name: Install web server packages
+- name: Install web server packages (RHEL/CentOS)
   yum:
     name:
       - nginx
       - nodejs
       - npm
     state: present
+  when: ansible_os_family == "RedHat"
+
+- name: Install web server packages (Debian/Ubuntu)
+  apt:
+    name:
+      - nginx
+      - nodejs
+      - npm
+    state: present
+    update_cache: yes
+  when: ansible_os_family == "Debian"
 
 - name: Create web application directory
   file:
     path: /var/www/{{ app_name }}
     state: directory
-    owner: nginx
-    group: nginx
+    owner: "{{ 'nginx' if ansible_os_family == 'RedHat' else 'www-data' }}"
+    group: "{{ 'nginx' if ansible_os_family == 'RedHat' else 'www-data' }}"
     mode: "0755"
 
 - name: Configure Nginx
   template:
     src: nginx.conf.j2
     dest: /etc/nginx/conf.d/{{ app_name }}.conf
+    owner: root
+    group: root
+    mode: "0644"
+    validate: "nginx -t -c %s"
   notify: Restart Nginx
 
 - name: Start and enable Nginx

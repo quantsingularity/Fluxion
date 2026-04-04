@@ -3,8 +3,11 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: fluxion-frontend
+  namespace: default
   labels:
     app: fluxion-frontend
+    component: frontend
+    tier: presentation
 spec:
   replicas: 2
   selector:
@@ -14,13 +17,24 @@ spec:
     metadata:
       labels:
         app: fluxion-frontend
+        component: frontend
+        tier: presentation
     spec:
+      serviceAccountName: fluxion-frontend-sa
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        runAsGroup: 101
+        fsGroup: 101
       containers:
         - name: fluxion-frontend
-          image: registry.example.com/app/frontend:latest
-          imagePullPolicy: Always
+          image: registry.example.com/app/frontend:v1.0.0
+          imagePullPolicy: IfNotPresent
           ports:
-            - containerPort: 80
+            - name: http
+              containerPort: 80
+              protocol: TCP
           resources:
             limits:
               cpu: 300m
@@ -32,18 +46,45 @@ spec:
             - name: REACT_APP_API_URL
               value: /api
             - name: REACT_APP_ENV
-              value: dev
+              valueFrom:
+                configMapKeyRef:
+                  name: fluxion-config
+                  key: NODE_ENV
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
           livenessProbe:
             httpGet:
               path: /
               port: 80
             initialDelaySeconds: 30
             periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
           readinessProbe:
             httpGet:
               path: /
               port: 80
             initialDelaySeconds: 5
             periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: nginx-cache
+              mountPath: /var/cache/nginx
+            - name: nginx-run
+              mountPath: /var/run
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: nginx-cache
+          emptyDir: {}
+        - name: nginx-run
+          emptyDir: {}
       imagePullSecrets:
         - name: regcred

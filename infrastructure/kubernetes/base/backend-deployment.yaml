@@ -6,7 +6,6 @@ metadata:
   namespace: default
   labels:
     app: fluxion-backend
-    version: latest
     component: backend
     tier: application
 spec:
@@ -23,16 +22,12 @@ spec:
     metadata:
       labels:
         app: fluxion-backend
-        version: latest
         component: backend
         tier: application
       annotations:
         prometheus.io/scrape: "true"
         prometheus.io/port: "9090"
         prometheus.io/path: "/metrics"
-        # Force pod restart on config changes
-        checksum/config: "{{ include (print $.Template.BasePath '/app-configmap.yaml') . | sha256sum }}"
-        checksum/secret: "{{ include (print $.Template.BasePath '/app-secrets.yaml') . | sha256sum }}"
     spec:
       serviceAccountName: fluxion-backend-sa
       automountServiceAccountToken: true
@@ -71,9 +66,15 @@ spec:
             - name: METRICS_PORT
               value: "9090"
             - name: NODE_ENV
-              value: dev
+              valueFrom:
+                configMapKeyRef:
+                  name: fluxion-config
+                  key: NODE_ENV
             - name: LOG_LEVEL
-              value: info
+              valueFrom:
+                configMapKeyRef:
+                  name: fluxion-config
+                  key: LOG_LEVEL
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
@@ -94,8 +95,13 @@ spec:
                 secretKeyRef:
                   name: fluxion-app-secrets
                   key: encryption-key
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: fluxion-app-secrets
+                  key: redis-password
             - name: REDIS_URL
-              value: "redis://fluxion-redis:6379"
+              value: "redis://:$(REDIS_PASSWORD)@fluxion-redis:6379"
           envFrom:
             - configMapRef:
                 name: fluxion-config

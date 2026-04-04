@@ -3,8 +3,11 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: fluxion-database
+  namespace: default
   labels:
     app: fluxion-database
+    component: database
+    tier: data
 spec:
   serviceName: fluxion-database
   replicas: 1
@@ -15,13 +18,25 @@ spec:
     metadata:
       labels:
         app: fluxion-database
+        component: database
+        tier: data
     spec:
+      serviceAccountName: fluxion-database-sa
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        runAsGroup: 999
+        fsGroup: 999
+      terminationGracePeriodSeconds: 60
       containers:
         - name: fluxion-database
           image: mysql:8.0
           imagePullPolicy: IfNotPresent
           ports:
-            - containerPort: 3306
+            - name: mysql
+              containerPort: 3306
+              protocol: TCP
           resources:
             limits:
               cpu: 1000m
@@ -47,25 +62,44 @@ spec:
           volumeMounts:
             - name: fluxion-database-data
               mountPath: /var/lib/mysql
+            - name: tmp
+              mountPath: /tmp
           livenessProbe:
             exec:
               command:
-                ["mysqladmin", "ping", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
-            initialDelaySeconds: 30
-            periodSeconds: 10
+                - /bin/sh
+                - -c
+                - |
+                  mysqladmin ping -u root -p"${MYSQL_ROOT_PASSWORD}" --silent
+            initialDelaySeconds: 60
+            periodSeconds: 20
+            timeoutSeconds: 10
+            failureThreshold: 3
           readinessProbe:
             exec:
               command:
-                [
-                  "mysql",
-                  "-u",
-                  "root",
-                  "-p${MYSQL_ROOT_PASSWORD}",
-                  "-e",
-                  "SELECT 1",
-                ]
-            initialDelaySeconds: 5
-            periodSeconds: 5
+                - /bin/sh
+                - -c
+                - |
+                  mysql -u root -p"${MYSQL_ROOT_PASSWORD}" -e "SELECT 1" --silent 2>/dev/null
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          startupProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  mysqladmin ping -u root -p"${MYSQL_ROOT_PASSWORD}" --silent
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 30
+      volumes:
+        - name: tmp
+          emptyDir: {}
   volumeClaimTemplates:
     - metadata:
         name: fluxion-database-data

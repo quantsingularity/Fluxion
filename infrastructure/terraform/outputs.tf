@@ -23,22 +23,28 @@ output "db_security_group_id" {
   value       = module.security.db_security_group_id
 }
 
-output "app_instance_ids" {
-  description = "IDs of the application instances"
-  value       = module.compute.instance_ids
+output "autoscaling_group_name" {
+  description = "Name of the Auto Scaling Group"
+  value       = module.compute.autoscaling_group_name
 }
 
-output "app_instance_public_ips" {
-  description = "Public IPs of the application instances"
-  value       = module.compute.instance_public_ips
+output "load_balancer_dns" {
+  description = "DNS name of the load balancer"
+  value       = module.compute.load_balancer_dns
 }
 
 output "db_endpoint" {
-  description = "Endpoint of the database"
+  description = "Endpoint of the RDS database"
   value       = module.database.db_endpoint
+  sensitive   = true
 }
 
 output "s3_bucket_name" {
   description = "Name of the S3 bucket"
   value       = module.storage.s3_bucket_name
+}
+
+output "kms_key_arn" {
+  description = "ARN of the KMS key"
+  value       = aws_kms_key.fluxion_key.arn
 }
