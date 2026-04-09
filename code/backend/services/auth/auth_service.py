@@ -156,6 +156,8 @@ class AuthService:
                 refresh_token=refresh_token,
                 token_type="bearer",
                 expires_in=settings.auth.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+                user_id=user.id,
+                session_id=session.id,
             )
             await self._log_user_activity(
                 db,
@@ -216,6 +218,8 @@ class AuthService:
                 refresh_token=new_refresh_token,
                 token_type="bearer",
                 expires_in=settings.auth.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+                user_id=user.id,
+                session_id=session.id,
             )
             await self._log_user_activity(
                 db,
@@ -361,7 +365,7 @@ class AuthService:
     async def _get_user_by_email(self, db: AsyncSession, email: str) -> Optional[User]:
         """Get user by email"""
         result = await db.execute(
-            select(User).where(User.email == email, not User.is_deleted)
+            select(User).where(User.email == email, User.is_deleted == False)
         )
         return result.scalar_one_or_none()
 
@@ -370,14 +374,14 @@ class AuthService:
     ) -> Optional[User]:
         """Get user by username"""
         result = await db.execute(
-            select(User).where(User.username == username, not User.is_deleted)
+            select(User).where(User.username == username, User.is_deleted == False)
         )
         return result.scalar_one_or_none()
 
     async def _get_user_by_id(self, db: AsyncSession, user_id: UUID) -> Optional[User]:
         """Get user by ID"""
         result = await db.execute(
-            select(User).where(User.id == user_id, not User.is_deleted)
+            select(User).where(User.id == user_id, User.is_deleted == False)
         )
         return result.scalar_one_or_none()
 

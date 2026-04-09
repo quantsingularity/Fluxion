@@ -126,9 +126,11 @@ class TestRiskManagementService:
         self, risk_service, mock_db_session, sample_portfolio, sample_assets
     ):
         """Test portfolio risk calculation"""
-        mock_db_session.execute.return_value.scalars.return_value.all.return_value = (
-            sample_assets
-        )
+        from unittest.mock import MagicMock as _MagicMock
+
+        _exec_result = _MagicMock()
+        _exec_result.scalars.return_value.all.return_value = sample_assets
+        mock_db_session.execute.return_value = _exec_result
         portfolio_risk = await risk_service.calculate_portfolio_risk(
             mock_db_session, sample_portfolio.id
         )
@@ -190,9 +192,11 @@ class TestRiskManagementService:
         self, risk_service, mock_db_session, sample_portfolio, sample_assets
     ):
         """Test liquidity risk assessment"""
-        mock_db_session.execute.return_value.scalars.return_value.all.return_value = (
-            sample_assets
-        )
+        from unittest.mock import MagicMock as _MagicMock
+
+        _exec_result = _MagicMock()
+        _exec_result.scalars.return_value.all.return_value = sample_assets
+        mock_db_session.execute.return_value = _exec_result
         with patch.object(risk_service, "_get_liquidity_data") as mock_liquidity_data:
             mock_liquidity_data.return_value = {
                 "BTC": {"daily_volume": 1000000000, "bid_ask_spread": 0.001},
@@ -213,9 +217,11 @@ class TestRiskManagementService:
         self, risk_service, mock_db_session, sample_user, sample_transactions
     ):
         """Test operational risk assessment"""
-        mock_db_session.execute.return_value.scalars.return_value.all.return_value = (
-            sample_transactions
-        )
+        from unittest.mock import MagicMock as _MagicMock
+
+        _exec_result = _MagicMock()
+        _exec_result.scalars.return_value.all.return_value = sample_transactions
+        mock_db_session.execute.return_value = _exec_result
         operational_risk = await risk_service.assess_operational_risk(
             mock_db_session, sample_user.id
         )
@@ -352,9 +358,11 @@ class TestRiskManagementService:
         self, risk_service, mock_db_session, sample_portfolio, sample_assets
     ):
         """Test stress testing scenarios"""
-        mock_db_session.execute.return_value.scalars.return_value.all.return_value = (
-            sample_assets
-        )
+        from unittest.mock import MagicMock as _MagicMock
+
+        _exec_result = _MagicMock()
+        _exec_result.scalars.return_value.all.return_value = sample_assets
+        mock_db_session.execute.return_value = _exec_result
         scenarios = {
             "market_crash": {"market_shock": -0.3, "volatility_shock": 2.0},
             "liquidity_crisis": {"liquidity_shock": -0.5, "spread_shock": 3.0},

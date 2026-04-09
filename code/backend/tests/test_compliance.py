@@ -82,10 +82,16 @@ class TestKYCService:
         self, kyc_service, mock_db_session, sample_user
     ):
         """Test KYC process initiation"""
-        mock_db_session.execute.return_value.scalar_one_or_none.return_value = (
-            sample_user
-        )
+        from unittest.mock import MagicMock
+
+        user_result = MagicMock()
+        user_result.scalar_one_or_none.return_value = sample_user
+        kyc_result = MagicMock()
+        kyc_result.scalar_one_or_none.return_value = None
+        mock_db_session.execute.side_effect = [user_result, kyc_result]
         mock_db_session.commit = AsyncMock()
+        mock_db_session.add = MagicMock()
+        mock_db_session.flush = AsyncMock()
         kyc_process = await kyc_service.initiate_kyc_process(
             mock_db_session, sample_user.id, KYCTier.STANDARD
         )
@@ -174,9 +180,11 @@ class TestKYCService:
         self, kyc_service, mock_db_session, sample_user
     ):
         """Test comprehensive KYC assessment"""
-        mock_db_session.execute.return_value.scalar_one_or_none.return_value = (
-            sample_user
-        )
+        from unittest.mock import MagicMock
+
+        user_result = MagicMock()
+        user_result.scalar_one_or_none.return_value = sample_user
+        mock_db_session.execute.return_value = user_result
         with patch.object(
             kyc_service, "_perform_sanctions_screening"
         ) as mock_sanctions, patch.object(
@@ -688,6 +696,8 @@ class TestComplianceIntegration:
     @pytest.mark.asyncio
     async def test_end_to_end_kyc_process(self):
         """Test complete KYC process from initiation to completion"""
+        from unittest.mock import MagicMock
+
         kyc_service = KYCService()
         mock_db = AsyncMock()
         user = User(
@@ -697,12 +707,20 @@ class TestComplianceIntegration:
             last_name="Test",
             country="US",
         )
-        mock_db.execute.return_value.scalar_one_or_none.return_value = user
+        user_result = MagicMock()
+        user_result.scalar_one_or_none.return_value = user
+        kyc_result = MagicMock()
+        kyc_result.scalar_one_or_none.return_value = None
+        mock_db.execute.side_effect = [user_result, kyc_result, user_result]
         mock_db.commit = AsyncMock()
+        mock_db.add = MagicMock()
+        mock_db.flush = AsyncMock()
         kyc_process = await kyc_service.initiate_kyc_process(
             mock_db, user.id, KYCTier.ENHANCED
         )
         assert kyc_process["target_tier"] == KYCTier.ENHANCED.value
+        mock_db.execute.side_effect = None
+        mock_db.execute.return_value = user_result
         with patch.object(kyc_service.encryption_service, "encrypt_data"):
             doc_result = await kyc_service.verify_document(
                 mock_db,

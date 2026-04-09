@@ -16,7 +16,7 @@ class AppSettings(BaseSettings):
     )
 
     APP_NAME: str = Field(default="Fluxion API")
-    VERSION: str = Field(default="2.0.0")  # Changed from APP_VERSION to VERSION
+    VERSION: str = Field(default="2.0.0")
     APP_DESCRIPTION: str = Field(default="Production-ready DeFi Supply Chain Platform")
     ENVIRONMENT: str = Field(default="development")
     DEBUG: bool = Field(default=True)
@@ -27,22 +27,24 @@ class AppSettings(BaseSettings):
     DOCS_URL: Optional[str] = Field(default="/docs")
     REDOC_URL: Optional[str] = Field(default="/redoc")
     LOG_LEVEL: str = Field(default="INFO")
-    ALLOWED_ORIGINS: List[str] = Field(default=["*"])
-    ALLOWED_HOSTS: List[str] = Field(default=["*"])
+    # Store as plain str; use allowed_origins / allowed_hosts properties for list access
+    ALLOWED_ORIGINS: str = Field(default="*")
+    ALLOWED_HOSTS: str = Field(default="*")
 
     @field_validator("WORKERS")
     @classmethod
-    def validate_workers(cls, v: int, info) -> int:
+    def validate_workers(cls, v: int, info: Any) -> int:
         if info.data.get("ENVIRONMENT") == "production" and v < 2:
             return 4
         return v
 
-    @field_validator("ALLOWED_ORIGINS", mode="before")
-    @classmethod
-    def parse_allowed_origins(cls, v: Any) -> List[str]:
-        if isinstance(v, str):
-            return [origin.strip() for origin in v.split(",")]
-        return v
+    @property
+    def allowed_origins_list(self) -> List[str]:
+        return [o.strip() for o in self.ALLOWED_ORIGINS.split(",") if o.strip()]
+
+    @property
+    def allowed_hosts_list(self) -> List[str]:
+        return [h.strip() for h in self.ALLOWED_HOSTS.split(",") if h.strip()]
 
 
 class DatabaseSettings(BaseSettings):
@@ -98,17 +100,10 @@ class SecuritySettings(BaseSettings):
     PASSWORD_REQUIRE_SPECIAL: bool = Field(default=True)
     RATE_LIMIT_PER_MINUTE: int = Field(default=60)
     RATE_LIMIT_BURST: int = Field(default=100)
-    CORS_ORIGINS: List[str] = Field(default=["*"])
+    CORS_ORIGINS: str = Field(default="*")
     CORS_ALLOW_CREDENTIALS: bool = Field(default=True)
     ENCRYPTION_KEY: Optional[str] = Field(default=None)
     FIELD_ENCRYPTION_ENABLED: bool = Field(default=False)
-
-    @field_validator("CORS_ORIGINS", mode="before")
-    @classmethod
-    def parse_cors_origins(cls, v: Any) -> List[str]:
-        if isinstance(v, str):
-            return [origin.strip() for origin in v.split(",")]
-        return v
 
     @field_validator("SECRET_KEY")
     @classmethod
@@ -116,6 +111,23 @@ class SecuritySettings(BaseSettings):
         if len(v) < 32:
             raise ValueError("SECRET_KEY must be at least 32 characters long")
         return v
+
+    @property
+    def cors_origins_list(self) -> List[str]:
+        return [o.strip() for o in self.CORS_ORIGINS.split(",") if o.strip()]
+
+
+class AuthSettings(BaseSettings):
+    """Authentication settings"""
+
+    model_config = SettingsConfigDict(
+        env_file=".env", env_file_encoding="utf-8", case_sensitive=True, extra="ignore"
+    )
+
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(default=30)
+    REFRESH_TOKEN_EXPIRE_DAYS: int = Field(default=7)
+    MAX_LOGIN_ATTEMPTS: int = Field(default=5)
+    ACCOUNT_LOCKOUT_DURATION: int = Field(default=30)
 
 
 class BlockchainSettings(BaseSettings):
@@ -202,6 +214,7 @@ class Settings(BaseSettings):
     database: DatabaseSettings = DatabaseSettings()
     redis: RedisSettings = RedisSettings()
     security: SecuritySettings = SecuritySettings()
+    auth: AuthSettings = AuthSettings()
     blockchain: BlockchainSettings = BlockchainSettings()
     compliance: ComplianceSettings = ComplianceSettings()
     monitoring: MonitoringSettings = MonitoringSettings()

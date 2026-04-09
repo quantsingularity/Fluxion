@@ -4,7 +4,7 @@ Pytest configuration and fixtures for Fluxion backend tests
 
 import asyncio
 from datetime import datetime, timezone
-from typing import Any, AsyncGenerator, Generator
+from typing import Any, AsyncGenerator
 from uuid import uuid4
 
 import pytest
@@ -18,14 +18,6 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from sqlalchemy.pool import StaticPool
 
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
-
-
-@pytest.fixture(scope="session")
-def event_loop() -> Generator:
-    """Create an instance of the default event loop for the test session."""
-    loop = asyncio.get_event_loop_policy().new_event_loop()
-    yield loop
-    loop.close()
 
 
 @pytest_asyncio.fixture(scope="function")
@@ -105,8 +97,8 @@ async def admin_user(test_db: AsyncSession) -> User:
     return user
 
 
-@pytest.fixture
-def auth_headers(test_user: User, jwt_service: JWTService) -> dict:
+@pytest_asyncio.fixture
+async def auth_headers(test_user: User, jwt_service: JWTService) -> dict:
     """Create authentication headers for test user."""
     token_data = {
         "user_id": str(test_user.id),
@@ -117,8 +109,8 @@ def auth_headers(test_user: User, jwt_service: JWTService) -> dict:
     return {"Authorization": f"Bearer {access_token}"}
 
 
-@pytest.fixture
-def admin_auth_headers(admin_user: User, jwt_service: JWTService) -> dict:
+@pytest_asyncio.fixture
+async def admin_auth_headers(admin_user: User, jwt_service: JWTService) -> dict:
     """Create authentication headers for admin user."""
     token_data = {
         "user_id": str(admin_user.id),

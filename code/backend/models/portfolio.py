@@ -93,6 +93,12 @@ class Portfolio(BaseModel, TimestampMixin, AuditMixin, ComplianceMixin):
         nullable=False,
         comment="Total portfolio value in USD",
     )
+    total_value = Column(
+        DECIMAL(20, 8),
+        default=0,
+        nullable=True,
+        comment="Total portfolio value (alias for total_value_usd)",
+    )
     total_cost_basis_usd = Column(
         DECIMAL(20, 8), default=0, nullable=False, comment="Total cost basis in USD"
     )
@@ -235,6 +241,13 @@ class PortfolioAsset(BaseModel, TimestampMixin, AuditMixin):
     is_tracked = Column(
         Boolean, default=True, nullable=False, comment="Asset tracking enabled"
     )
+
+    # Trading / price fields (used by risk service and tests)
+    symbol = Column(String(20), nullable=True, comment="Asset symbol alias")
+    quantity = Column(DECIMAL(36, 18), nullable=True, comment="Quantity held")
+    current_price = Column(DECIMAL(36, 18), nullable=True, comment="Current price USD")
+    current_value = Column(DECIMAL(20, 8), nullable=True, comment="Current value USD")
+    cost_basis = Column(DECIMAL(20, 8), nullable=True, comment="Cost basis USD")
 
     # Relationships
     portfolio = relationship("Portfolio", back_populates="assets")

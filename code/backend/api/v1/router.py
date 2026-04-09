@@ -3,7 +3,16 @@ API v1 Router for Fluxion Backend
 Aggregates all API routes for version 1 of the API
 """
 
-from api.routes import analytics, auth, health, portfolio, transactions, users
+from api.routes import (
+    analytics,
+    auth,
+    compliance,
+    health,
+    portfolio,
+    risk,
+    transactions,
+    users,
+)
 from fastapi import APIRouter
 
 api_router = APIRouter()
@@ -27,3 +36,9 @@ api_router.include_router(
 
 # Analytics routes (auth required)
 api_router.include_router(analytics.router, prefix="/analytics", tags=["Analytics"])
+
+# Compliance and KYC routes
+api_router.include_router(compliance.router, tags=["Compliance"])
+
+# Risk management routes
+api_router.include_router(risk.router, tags=["Risk"])

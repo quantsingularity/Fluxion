@@ -89,7 +89,12 @@ class PasswordChange(BaseSchema):
     new_password: str = Field(
         ..., min_length=8, max_length=128, description="New password"
     )
-    confirm_new_password: str = Field(..., description="Confirm new password")
+    confirm_new_password: Optional[str] = Field(
+        None, description="Confirm new password"
+    )
+    confirm_password: Optional[str] = Field(
+        None, description="Confirm new password (alias)"
+    )
 
     @field_validator("new_password")
     @classmethod
@@ -107,8 +112,9 @@ class PasswordChange(BaseSchema):
 
     @model_validator(mode="after")
     def passwords_match(self):
-        """Validate that new_password and confirm_new_password match"""
-        if self.new_password != self.confirm_new_password:
+        """Validate that new_password and confirm password match"""
+        confirm = self.confirm_new_password or self.confirm_password
+        if confirm is not None and self.new_password != confirm:
             raise ValueError("Passwords do not match")
         return self
 

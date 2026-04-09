@@ -102,6 +102,7 @@ class User(
     state = Column(String(100), nullable=True, comment="State/Province (encrypted)")
     postal_code = Column(String(20), nullable=True, comment="Postal code (encrypted)")
     country = Column(String(100), nullable=True, comment="Country (encrypted)")
+    risk_tolerance = Column(String(50), nullable=True, comment="Risk tolerance level")
     status = Column(
         Enum(UserStatus),
         default=UserStatus.PENDING,
@@ -181,6 +182,7 @@ class User(
     )
     profile = relationship(
         "UserProfile",
+        foreign_keys="[UserProfile.user_id]",
         back_populates="user",
         uselist=False,
         cascade="all, delete-orphan",
@@ -198,13 +200,16 @@ class User(
         "Transaction", back_populates="user", cascade="all, delete-orphan"
     )
     kyc_records = relationship(
-        "KYCRecord", back_populates="user", cascade="all, delete-orphan"
+        "KYCRecord",
+        foreign_keys="[KYCRecord.user_id]",
+        back_populates="user",
+        cascade="all, delete-orphan",
     )
     risk_profiles = relationship(
         "RiskProfile", back_populates="user", cascade="all, delete-orphan"
     )
     audit_logs = relationship(
-        "AuditLog", foreign_keys="AuditLog.user_id", cascade="all, delete-orphan"
+        "AuditLog", foreign_keys="[AuditLog.user_id]", cascade="all, delete-orphan"
     )
 
     @property
@@ -295,7 +300,9 @@ class UserProfile(BaseModel, TimestampMixin, AuditMixin):
     profile_completion_percentage = Column(
         Integer, default=0, nullable=False, comment="Profile completion percentage"
     )
-    user = relationship("User", back_populates="profile")
+    user = relationship(
+        "User", foreign_keys="[UserProfile.user_id]", back_populates="profile"
+    )
 
     def calculate_completion_percentage(self) -> int:
         """Calculate profile completion percentage"""

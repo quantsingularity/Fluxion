@@ -86,7 +86,7 @@ class TestAuthService:
         await auth_service.register_user(
             test_db, sample_user_register, "127.0.0.1", "test-agent"
         )
-        duplicate_username_data = sample_user_register.copy()
+        duplicate_username_data = sample_user_register.model_copy()
         duplicate_username_data.email = "different@example.com"
         with pytest.raises(AuthenticationError, match="Username already taken"):
             await auth_service.register_user(
@@ -173,10 +173,15 @@ class TestAuthService:
 
     async def test_change_password_success(self, test_db, auth_service, test_user):
         """Test successful password change."""
+        from unittest.mock import AsyncMock
+
         old_password = "OldPassword123!"
         new_password = "NewPassword123!"
         test_user.hashed_password = auth_service._hash_password(old_password)
         await test_db.commit()
+        auth_service.session_service.invalidate_user_sessions = AsyncMock(
+            return_value=None
+        )
         password_data = PasswordChange(
             current_password=old_password,
             new_password=new_password,
@@ -193,10 +198,15 @@ class TestAuthService:
         self, test_db, auth_service, test_user
     ):
         """Test password change with invalid current password."""
+        from unittest.mock import AsyncMock
+
         old_password = "OldPassword123!"
         new_password = "NewPassword123!"
         test_user.hashed_password = auth_service._hash_password(old_password)
         await test_db.commit()
+        auth_service.session_service.invalidate_user_sessions = AsyncMock(
+            return_value=None
+        )
         password_data = PasswordChange(
             current_password="WrongPassword123!",
             new_password=new_password,
@@ -235,8 +245,10 @@ class TestAuthService:
 
     async def test_logout_user_success(self, test_db, auth_service, test_user):
         """Test successful user logout."""
+        from unittest.mock import AsyncMock
+
         session_id = uuid4()
-        auth_service.session_service.invalidate_session = lambda db, sid: None
+        auth_service.session_service.invalidate_session = AsyncMock(return_value=None)
         await auth_service.logout_user(
             test_db, test_user.id, session_id, "127.0.0.1", "test-agent"
         )

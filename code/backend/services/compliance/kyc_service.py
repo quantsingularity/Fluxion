@@ -342,9 +342,7 @@ class KYCService:
         try:
             start_time = datetime.now(timezone.utc)
             document_id = str(uuid4())
-            encrypted_document = await self.encryption_service.encrypt_data(
-                document_data
-            )
+            encrypted_document = self.encryption_service.encrypt_data(document_data)
             extracted_data = await self._extract_document_data(
                 document_data, document_type
             )
@@ -617,7 +615,7 @@ class KYCService:
             risks.append("Poor document quality or readability")
         nationality = extracted_data.get("nationality", "").upper()
         if nationality in self.high_risk_countries:
-            risks.append(f"High-risk jurisdiction: {nationality}")
+            risks.append(f"high-risk jurisdiction: {nationality}")
         return risks
 
     async def _analyze_biometric_data(self, biometric_data: bytes) -> Dict[str, Any]:

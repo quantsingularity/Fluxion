@@ -74,6 +74,45 @@ async def lifespan(app: FastAPI):
         logger.error(f"Application shutdown error: {str(e)}")
 
 
+import json
+from datetime import date, datetime
+from decimal import Decimal
+from uuid import UUID
+
+
+class _CustomEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, (datetime, date)):
+            return obj.isoformat()
+        if isinstance(obj, Decimal):
+            return float(obj)
+        if isinstance(obj, UUID):
+            return str(obj)
+        return super().default(obj)
+
+
+from starlette.responses import JSONResponse as _StarletteJSONResponse
+
+
+class _PatchedJSONResponse(_StarletteJSONResponse):
+    def render(self, content) -> bytes:
+        return json.dumps(
+            content,
+            ensure_ascii=False,
+            allow_nan=False,
+            indent=None,
+            separators=(",", ":"),
+            cls=_CustomEncoder,
+        ).encode("utf-8")
+
+
+import fastapi.responses as _fr
+import starlette.responses as _sr
+
+_sr.JSONResponse = _PatchedJSONResponse
+_fr.JSONResponse = _PatchedJSONResponse
+
+
 # Create FastAPI application
 app = FastAPI(
     title=settings.app.APP_NAME,
@@ -85,6 +124,12 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+import fastapi.responses as _fastapi_responses
+
+# Patch FastAPI's default JSON encoder to handle datetime/Decimal/UUID
+
+_fastapi_responses.JSONResponse.media_type = "application/json"
+
 # Add security middleware
 app.add_middleware(SecurityMiddleware)
 
@@ -94,7 +139,7 @@ app.add_middleware(RateLimitMiddleware)
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.app.ALLOWED_ORIGINS,
+    allow_origins=settings.app.allowed_origins_list,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allow_headers=["*"],
@@ -102,7 +147,7 @@ app.add_middleware(
 )
 
 # Add trusted host middleware
-if settings.app.ALLOWED_HOSTS and settings.app.ALLOWED_HOSTS != ["*"]:
+if settings.app.ALLOWED_HOSTS and settings.app.ALLOWED_HOSTS not in ("*", ["*"]):
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.app.ALLOWED_HOSTS)
 
 
@@ -116,7 +161,7 @@ async def http_exception_handler(request: Request, exc: HTTPException):
         status_code=exc.status_code,
         content=ErrorResponse(
             error=exc.detail, error_code=f"HTTP_{exc.status_code}"
-        ).model_dump(),
+        ).model_dump(mode="json"),
     )
 
 
@@ -129,7 +174,7 @@ async def starlette_http_exception_handler(
         status_code=exc.status_code,
         content=ErrorResponse(
             error=exc.detail, error_code=f"HTTP_{exc.status_code}"
-        ).model_dump(),
+        ).model_dump(mode="json"),
     )
 
 
@@ -152,7 +197,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
             error="Validation failed",
             error_code="VALIDATION_ERROR",
             validation_errors=validation_errors,
-        ).model_dump(),
+        ).model_dump(mode="json"),
     )
 
 
@@ -168,14 +213,14 @@ async def general_exception_handler(request: Request, exc: Exception):
                 error=str(exc),
                 error_code="INTERNAL_SERVER_ERROR",
                 details={"type": type(exc).__name__},
-            ).model_dump(),
+            ).model_dump(mode="json"),
         )
     else:
         return JSONResponse(
             status_code=500,
             content=ErrorResponse(
                 error="Internal server error", error_code="INTERNAL_SERVER_ERROR"
-            ).model_dump(),
+            ).model_dump(mode="json"),
         )
 
 

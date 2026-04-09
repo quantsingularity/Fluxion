@@ -51,10 +51,12 @@ class DocumentType(enum.Enum):
     GOVERNMENT_ID = "government_id"
     PASSPORT = "passport"
     DRIVERS_LICENSE = "drivers_license"
+    NATIONAL_ID = "national_id"
     PROOF_OF_ADDRESS = "proof_of_address"
     UTILITY_BILL = "utility_bill"
     BANK_STATEMENT = "bank_statement"
     TAX_RETURN = "tax_return"
+    PROOF_OF_INCOME = "proof_of_income"
     BUSINESS_REGISTRATION = "business_registration"
     OTHER = "other"
 
@@ -187,6 +189,25 @@ class KYCRecord(BaseModel, TimestampMixin, AuditMixin, EncryptedMixin):
     risk_score = Column(Float, nullable=True, comment="Risk score")
     risk_factors = Column(JSON, nullable=True, comment="Risk factors")
     document_urls = Column(JSON, nullable=True, comment="Document URLs (encrypted)")
+    target_level = Column(String(50), nullable=True, comment="Target KYC tier/level")
+    email_verified = Column(
+        Boolean, default=False, nullable=False, comment="Email verified"
+    )
+    phone_verified = Column(
+        Boolean, default=False, nullable=False, comment="Phone verified"
+    )
+    identity_verified = Column(
+        Boolean, default=False, nullable=False, comment="Identity verified"
+    )
+    address_verified = Column(
+        Boolean, default=False, nullable=False, comment="Address verified"
+    )
+    biometric_verified = Column(
+        Boolean, default=False, nullable=False, comment="Biometric verified"
+    )
+    source_of_funds_verified = Column(
+        Boolean, default=False, nullable=False, comment="Source of funds verified"
+    )
     user = relationship("User", foreign_keys=[user_id], back_populates="kyc_records")
     reviewer = relationship("User", foreign_keys=[reviewer_id])
 

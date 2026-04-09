@@ -387,7 +387,6 @@ class EncryptionService:
         if salt is None:
             salt = secrets.token_bytes(32)
         kdf = Scrypt(
-            algorithm=hashes.SHA256(),
             length=32,
             salt=salt,
             n=2**14,
@@ -407,7 +406,6 @@ class EncryptionService:
             salt_bytes = base64.b64decode(salt.encode("ascii"))
             hash_bytes = base64.b64decode(password_hash.encode("ascii"))
             kdf = Scrypt(
-                algorithm=hashes.SHA256(),
                 length=32,
                 salt=salt_bytes,
                 n=2**14,
@@ -540,3 +538,39 @@ class EncryptionService:
             "supported_algorithms": [alg.value for alg in EncryptionAlgorithm],
             "key_rotation_interval_days": self.key_rotation_interval.days,
         }
+
+    def encrypt_data(self, data: Any, context: str = "default") -> bytes:
+        """Encrypt arbitrary data (alias for encrypt_symmetric returning bytes)."""
+        if isinstance(data, str):
+            data = data.encode("utf-8")
+        elif not isinstance(data, bytes):
+            data = str(data).encode("utf-8")
+        encrypted = self.encrypt_symmetric(data)
+        import json as _json
+
+        return _json.dumps(
+            {
+                "ciphertext": encrypted.ciphertext.hex(),
+                "nonce": encrypted.nonce.hex() if encrypted.nonce else None,
+                "tag": encrypted.tag.hex() if encrypted.tag else None,
+                "algorithm": encrypted.algorithm.value,
+            }
+        ).encode("utf-8")
+
+    def decrypt_data(self, encrypted_bytes: bytes, context: str = "default") -> bytes:
+        """Decrypt data produced by encrypt_data."""
+        import json as _json
+
+        payload = _json.loads(encrypted_bytes.decode("utf-8"))
+        from services.security.encryption_service import (
+            EncryptedData,
+            EncryptionAlgorithm,
+        )
+
+        enc = EncryptedData(
+            ciphertext=bytes.fromhex(payload["ciphertext"]),
+            nonce=bytes.fromhex(payload["nonce"]) if payload.get("nonce") else None,
+            tag=bytes.fromhex(payload["tag"]) if payload.get("tag") else None,
+            algorithm=EncryptionAlgorithm(payload["algorithm"]),
+        )
+        return self.decrypt_symmetric(enc)

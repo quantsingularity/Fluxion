@@ -565,3 +565,262 @@ class ComplianceService:
         if resolution_rate < 90:
             recommendations.append("Improve alert resolution processes")
         return recommendations
+
+    async def monitor_transaction(
+        self, db: AsyncSession, transaction_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Monitor a transaction for suspicious activity."""
+        risk_score = 0.0
+        flags: List[str] = []
+
+        amount = float(transaction_data.get("amount", 0))
+        if amount >= float(self.transaction_threshold_usd):
+            risk_score += 0.3
+            flags.append("high_value_transaction")
+
+        frequency = transaction_data.get("frequency", 0)
+        if frequency >= self.suspicious_velocity_threshold:
+            risk_score += 0.25
+            flags.append("high_frequency")
+
+        country_risk = transaction_data.get("country_risk", 0.0)
+        risk_score += country_risk * 0.3
+
+        time_pattern = transaction_data.get("time_pattern", "normal")
+        if time_pattern == "unusual":
+            risk_score += 0.15
+            flags.append("unusual_time_pattern")
+
+        risk_score = min(1.0, risk_score)
+
+        if risk_score >= 0.7:
+            recommended_action = "block"
+        elif risk_score >= 0.4:
+            recommended_action = "review"
+        else:
+            recommended_action = "allow"
+
+        return {
+            "risk_score": risk_score,
+            "flags": flags,
+            "recommended_action": recommended_action,
+            "transaction_id": transaction_data.get("user_id", "unknown"),
+        }
+
+    async def perform_aml_screening(
+        self, db: AsyncSession, user_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Perform AML screening on a user."""
+        aml_risk_score = 0.0
+        suspicious_indicators: List[str] = []
+
+        country = user_data.get("country", "")
+        if country in self.high_risk_countries:
+            aml_risk_score += 0.4
+            suspicious_indicators.append("high_risk_country")
+
+        patterns = user_data.get("transaction_patterns", {})
+        if patterns.get("large_cash_transactions", 0) >= 3:
+            aml_risk_score += 0.3
+            suspicious_indicators.append("large_cash_transactions")
+        if patterns.get("rapid_movement", False):
+            aml_risk_score += 0.2
+            suspicious_indicators.append("rapid_fund_movement")
+        if patterns.get("structuring_pattern", False):
+            aml_risk_score += 0.35
+            suspicious_indicators.append("structuring_pattern")
+
+        aml_risk_score = min(1.0, aml_risk_score)
+
+        if aml_risk_score >= 0.7:
+            compliance_status = "high_risk"
+        elif aml_risk_score >= 0.4:
+            compliance_status = "medium_risk"
+        else:
+            compliance_status = "low_risk"
+
+        return {
+            "aml_risk_score": aml_risk_score,
+            "suspicious_indicators": suspicious_indicators,
+            "compliance_status": compliance_status,
+            "user_id": user_data.get("user_id"),
+        }
+
+    async def generate_regulatory_report(
+        self, db: AsyncSession, reporting_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Generate a regulatory compliance report."""
+        import uuid as _uuid
+        from datetime import timedelta
+
+        report_type = reporting_data.get("report_type", "SAR")
+        jurisdiction = reporting_data.get("jurisdiction", "US")
+
+        deadlines = {"SAR": 30, "CTR": 15, "FBAR": 365}
+        days = deadlines.get(report_type, 30)
+
+        return {
+            "report_id": str(_uuid.uuid4()),
+            "report_type": report_type,
+            "status": "pending",
+            "jurisdiction": jurisdiction,
+            "submission_deadline": (
+                datetime.now(timezone.utc) + timedelta(days=days)
+            ).isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "user_id": reporting_data.get("user_id"),
+        }
+
+    async def create_compliance_alert(
+        self, db: AsyncSession, alert_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Create a compliance alert."""
+        import uuid as _uuid
+
+        return {
+            "alert_id": str(_uuid.uuid4()),
+            "user_id": alert_data.get("user_id"),
+            "alert_type": alert_data.get("alert_type"),
+            "severity": alert_data.get("severity"),
+            "description": alert_data.get("description"),
+            "status": "active",
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "metadata": alert_data.get("metadata", {}),
+        }
+
+    def calculate_risk_score(self, risk_factors: Dict[str, Any]) -> float:
+        """Calculate a composite risk score from multiple risk factors."""
+        score = 0.0
+
+        country_risk = float(risk_factors.get("country_risk", 0.0))
+        score += country_risk * 0.25
+
+        amount = float(risk_factors.get("transaction_amount", 0))
+        if amount >= 10000:
+            score += min(0.2, amount / 500000)
+
+        frequency = int(risk_factors.get("frequency", 0))
+        if frequency > 10:
+            score += min(0.15, (frequency - 10) * 0.01)
+
+        kyc_level = risk_factors.get("kyc_level", "enhanced")
+        kyc_scores = {"enhanced": 0.0, "standard": 0.05, "basic": 0.15, "none": 0.3}
+        score += kyc_scores.get(kyc_level, 0.1)
+
+        if risk_factors.get("sanctions_match", False):
+            score += 0.5
+
+        if risk_factors.get("pep_status", False):
+            score += 0.3
+
+        return min(1.0, score)
+
+    def analyze_transaction_patterns(
+        self, transactions: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
+        """Analyse a list of transactions for suspicious patterns."""
+        if not transactions:
+            return {"pattern_type": "normal", "risk_indicators": []}
+
+        amounts = [float(t.get("amount", 0)) for t in transactions]
+        avg_amount = sum(amounts) / len(amounts) if amounts else 0
+        risk_indicators: List[str] = []
+
+        structuring_threshold = 10000
+        close_amounts = [
+            a
+            for a in amounts
+            if structuring_threshold * 0.8 <= a < structuring_threshold
+        ]
+        if len(close_amounts) >= 3:
+            risk_indicators.append("potential_structuring")
+
+        if avg_amount >= structuring_threshold:
+            risk_indicators.append("high_average_transaction_value")
+
+        if len(transactions) >= 5:
+            from datetime import timedelta
+
+            timestamps = [
+                t.get("timestamp") for t in transactions if t.get("timestamp")
+            ]
+            if timestamps:
+                time_span = max(timestamps) - min(timestamps)
+                if time_span < timedelta(hours=24):
+                    risk_indicators.append("rapid_transaction_velocity")
+
+        pattern_type = "suspicious" if risk_indicators else "normal"
+
+        return {
+            "pattern_type": pattern_type,
+            "risk_indicators": risk_indicators,
+            "transaction_count": len(transactions),
+            "average_amount": avg_amount,
+        }
+
+    def get_jurisdiction_rules(self, jurisdiction: str) -> Dict[str, Any]:
+        """Return compliance rules for a given jurisdiction."""
+        rules: Dict[str, Any] = {
+            "jurisdiction": jurisdiction,
+            "kyc_requirements": ["identity_verification", "address_verification"],
+            "sanctions_lists": ["OFAC", "UN"],
+            "transaction_reporting_threshold": 10000,
+            "aml_requirements": True,
+        }
+
+        if jurisdiction == "US":
+            rules.update(
+                {
+                    "transaction_reporting_threshold": 10000,
+                    "sanctions_lists": ["OFAC", "FinCEN", "BIS"],
+                    "sar_required": True,
+                    "ctr_required": True,
+                    "fbar_required": True,
+                }
+            )
+        elif jurisdiction in ("EU", "EUR"):
+            rules.update(
+                {
+                    "transaction_reporting_threshold": 10000,
+                    "gdpr_compliance": True,
+                    "mld5_requirements": True,
+                    "pep_screening": True,
+                    "beneficial_ownership": True,
+                }
+            )
+        elif jurisdiction == "UK":
+            rules.update(
+                {
+                    "transaction_reporting_threshold": 10000,
+                    "mlr_2017": True,
+                    "pep_screening": True,
+                }
+            )
+
+        return rules
+
+    def validate_compliance_workflow(self, workflow: Dict[str, Any]) -> Dict[str, Any]:
+        """Validate a compliance workflow for completeness."""
+        required_steps = [
+            "kyc_completion",
+            "document_verification",
+            "sanctions_screening",
+        ]
+        missing_steps: List[str] = []
+        for step in required_steps:
+            value = workflow.get(step)
+            if not value:
+                missing_steps.append(step)
+
+        is_valid = len(missing_steps) == 0
+
+        optional_steps = ["biometric_verification", "risk_assessment"]
+        completed_optional = [s for s in optional_steps if workflow.get(s)]
+
+        return {
+            "is_valid": is_valid,
+            "missing_steps": missing_steps,
+            "completed_steps": [s for s in required_steps if s not in missing_steps],
+            "optional_completed": completed_optional,
+            "compliance_level": "full" if is_valid else "partial",
+        }

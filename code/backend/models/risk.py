@@ -399,11 +399,11 @@ class RiskAlert(BaseModel, TimestampMixin, AuditMixin):
     )
 
     # Relationships
-    user = relationship("User")
+    user = relationship("User", foreign_keys="[RiskAlert.user_id]")
     portfolio = relationship("Portfolio")
     risk_profile = relationship("RiskProfile", back_populates="alerts")
     risk_assessment = relationship("RiskAssessment")
-    acknowledger = relationship("User", foreign_keys=[acknowledged_by])
+    acknowledger = relationship("User", foreign_keys="[RiskAlert.acknowledged_by]")
 
     def is_active(self) -> bool:
         """Check if alert is active"""

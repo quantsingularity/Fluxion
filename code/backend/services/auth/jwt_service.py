@@ -674,6 +674,68 @@ class JWTService:
             raise ValueError(validation_result.error_message)
         return asdict(validation_result.claims)
 
+    def create_access_token(self, data: Dict[str, Any]) -> str:
+        """Create a simple access token synchronously (backward-compatible)"""
+        current_time = datetime.now(timezone.utc)
+        expires_at = current_time + self.access_token_ttl
+        payload = {
+            "sub": data.get("user_id", ""),
+            "sid": data.get("session_id", ""),
+            "typ": TokenType.ACCESS.value,
+            "roles": [data["role"]] if "role" in data else data.get("roles", []),
+            "permissions": data.get("permissions", []),
+            "email": data.get("email", ""),
+            "mfa": data.get("mfa_verified", False),
+            "iat": int(current_time.timestamp()),
+            "exp": int(expires_at.timestamp()),
+            "nbf": int(current_time.timestamp()),
+            "iss": self.issuer,
+            "aud": self.audience,
+            "jti": self._generate_jti(),
+        }
+        payload.update({k: v for k, v in data.items() if k not in payload})
+        return jwt.encode(payload, self.secret_key, algorithm=self.algorithm)
+
+    def create_refresh_token(self, data: Dict[str, Any]) -> str:
+        """Create a simple refresh token synchronously (backward-compatible)"""
+        current_time = datetime.now(timezone.utc)
+        expires_at = current_time + self.refresh_token_ttl
+        payload = {
+            "sub": data.get("user_id", ""),
+            "sid": data.get("session_id", ""),
+            "typ": TokenType.REFRESH.value,
+            "roles": [data["role"]] if "role" in data else data.get("roles", []),
+            "permissions": data.get("permissions", []),
+            "email": data.get("email", ""),
+            "mfa": data.get("mfa_verified", False),
+            "iat": int(current_time.timestamp()),
+            "exp": int(expires_at.timestamp()),
+            "nbf": int(current_time.timestamp()),
+            "iss": self.issuer,
+            "aud": self.audience,
+            "jti": self._generate_jti(),
+        }
+        payload.update({k: v for k, v in data.items() if k not in payload})
+        return jwt.encode(payload, self.secret_key, algorithm=self.algorithm)
+
+    def verify_refresh_token(self, token: str) -> Dict[str, Any]:
+        """Verify refresh token synchronously and return payload (backward-compatible)"""
+        try:
+            payload = jwt.decode(
+                token,
+                self.secret_key,
+                algorithms=[self.algorithm],
+                issuer=self.issuer,
+                audience=self.audience,
+            )
+            if payload.get("typ") != TokenType.REFRESH.value:
+                raise ValueError("Not a refresh token")
+            return payload
+        except ExpiredSignatureError:
+            raise ValueError("Refresh token has expired")
+        except InvalidTokenError as e:
+            raise ValueError(f"Invalid refresh token: {e}")
+
 
 # Backward compatibility alias
 JWTService = JWTService

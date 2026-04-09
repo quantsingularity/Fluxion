@@ -31,6 +31,8 @@ class TransactionType(enum.Enum):
     WITHDRAWAL = "withdrawal"
     TRANSFER = "transfer"
     SWAP = "swap"
+    BUY = "buy"
+    SELL = "sell"
     STAKE = "stake"
     UNSTAKE = "unstake"
     LIQUIDITY_ADD = "liquidity_add"
@@ -88,13 +90,24 @@ class Transaction(BaseModel, TimestampMixin, AuditMixin, ComplianceMixin):
     internal_reference = Column(
         String(100),
         unique=True,
-        nullable=False,
+        nullable=True,
         index=True,
         comment="Internal reference ID",
     )
     external_reference = Column(
         String(100), nullable=True, comment="External system reference"
     )
+
+    # Portfolio linkage (used by risk service and tests)
+    portfolio_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("portfolios.id"),
+        nullable=True,
+        comment="Portfolio ID",
+    )
+    asset_symbol = Column(String(20), nullable=True, comment="Asset symbol")
+    quantity = Column(DECIMAL(36, 18), nullable=True, comment="Asset quantity")
+    price = Column(DECIMAL(36, 18), nullable=True, comment="Price per unit USD")
 
     # Transaction details
     transaction_type = Column(
