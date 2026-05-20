@@ -51,8 +51,7 @@ Fluxion/
 ├── scripts/                # Automation, setup, and utility scripts
 ├── IMPROVEMENTS.md         # Detailed changelog of v2 improvements
 ├── LICENSE                 # License information
-├── README.md               # Project overview and instructions
-└── tools/                  # Formatter configs, linting tools, and dev utilities
+└── README.md               # Project overview and instructions
 ```
 
 ## Key Features
