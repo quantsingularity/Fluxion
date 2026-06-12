@@ -144,6 +144,9 @@ class UserService:
         self.email_to_user_id: Dict[str, str] = {}
         self.username_to_user_id: Dict[str, str] = {}
         self._verification_tokens: Dict[str, str] = {}  # token -> user_id
+        self._reset_tokens: Dict[str, Dict[str, Any]] = (
+            {}
+        )  # token -> {user_id, expires_at}
         self.default_preferences = {
             "notification_preferences": {
                 "account_updates": ["email", "in_app"],
@@ -325,6 +328,7 @@ class UserService:
             permissions=self._get_user_permissions(user),
             device_info=device_info,
             mfa_verified=False,
+            custom_claims={"email": user.email},
         )
         user.last_login = datetime.now(timezone.utc)
         user.updated_at = datetime.now(timezone.utc)
@@ -504,7 +508,17 @@ class UserService:
             raise ValueError("User not found")
         if not user.security.mfa_secret:
             raise ValueError("MFA setup not initiated")
-        if len(mfa_code) == 6 and mfa_code.isdigit():
+        import pyotp
+
+        # Verify the code against the TOTP secret. The previous
+        # implementation accepted *any* 6-digit string, which defeated the
+        # purpose of MFA entirely.
+        totp = pyotp.TOTP(user.security.mfa_secret)
+        if totp.verify(mfa_code, valid_window=1) or (
+            mfa_code in user.security.backup_codes
+        ):
+            if mfa_code in user.security.backup_codes:
+                user.security.backup_codes.remove(mfa_code)
             user.security.mfa_enabled = True
             user.updated_at = datetime.now(timezone.utc)
             logger.info(f"MFA enabled for user: {user_id}")
@@ -528,6 +542,83 @@ class UserService:
         user.updated_at = datetime.now(timezone.utc)
         logger.info(f"MFA disabled for user: {user_id}")
         return {"success": True, "message": "MFA disabled successfully"}
+
+    async def get_user_preferences(self, user_id: str) -> Dict[str, Any]:
+        """Get user preferences"""
+        user = self.users.get(user_id)
+        if not user:
+            raise ValueError("User not found")
+        return asdict(user.preferences)
+
+    async def deactivate_user(self, user_id: str) -> Dict[str, Any]:
+        """Deactivate (close) a user's own account"""
+        user = self.users.get(user_id)
+        if not user:
+            raise ValueError("User not found")
+        user.status = UserStatus.CLOSED
+        user.updated_at = datetime.now(timezone.utc)
+        await self.jwt_service.revoke_user_sessions(user_id, "Account deactivated")
+        logger.info(f"User account deactivated: {user_id}")
+        return {"success": True, "message": "Account deactivated successfully"}
+
+    async def get_user_sessions(self, user_id: str) -> Dict[str, Any]:
+        """Get active sessions and recent login history for a user"""
+        user = self.users.get(user_id)
+        if not user:
+            raise ValueError("User not found")
+        active_sessions = [
+            {"session_id": session_id, **session_data}
+            for session_id, session_data in self.jwt_service.active_sessions.items()
+            if session_data.get("user_id") == user_id
+        ]
+        return {
+            "active_sessions": active_sessions,
+            "login_history": user.security.login_history[-10:],
+        }
+
+    async def request_password_reset(self, email: str) -> Optional[str]:
+        """Create a password reset token. Returns None for unknown emails so
+        callers can respond identically and avoid account enumeration."""
+        user_id = self.email_to_user_id.get(email.lower())
+        if not user_id:
+            return None
+        reset_token = secrets.token_urlsafe(32)
+        self._reset_tokens[reset_token] = {
+            "user_id": user_id,
+            "expires_at": datetime.now(timezone.utc) + timedelta(hours=1),
+        }
+        logger.info(f"Password reset requested for user: {user_id}")
+        return reset_token
+
+    async def confirm_password_reset(
+        self, reset_token: str, new_password: str
+    ) -> Dict[str, Any]:
+        """Reset password using a previously issued reset token"""
+        token_data = self._reset_tokens.get(reset_token)
+        if not token_data or datetime.now(timezone.utc) > token_data["expires_at"]:
+            self._reset_tokens.pop(reset_token, None)
+            raise ValueError("Invalid or expired reset token")
+        user = self.users.get(token_data["user_id"])
+        if not user:
+            raise ValueError("Invalid or expired reset token")
+        password_validation = self._validate_password(new_password)
+        if not password_validation["valid"]:
+            raise ValueError(
+                f"New password validation failed: {', '.join(password_validation['errors'])}"
+            )
+        password_hash, password_salt = self.encryption_service.hash_password(
+            new_password
+        )
+        user.security.password_hash = password_hash
+        user.security.password_salt = password_salt
+        user.security.password_changed_at = datetime.now(timezone.utc)
+        user.security.failed_login_attempts = 0
+        user.security.account_locked_until = None
+        user.updated_at = datetime.now(timezone.utc)
+        del self._reset_tokens[reset_token]
+        await self.jwt_service.revoke_user_sessions(user.user_id, "Password reset")
+        logger.info(f"Password reset completed for user: {user.user_id}")
+        return {"success": True, "message": "Password reset successfully"}
 
     async def suspend_user(
         self, user_id: str, reason: str, admin_user_id: str

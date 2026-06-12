@@ -9,6 +9,10 @@ FROM node:20-alpine AS build
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
 
+# Vite inlines VITE_* env vars into the static bundle at build time.
+ARG VITE_API_BASE_URL=/api/v1
+ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
+
 WORKDIR /app
 
 # Install dependencies first for better layer caching.

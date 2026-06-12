@@ -8,6 +8,8 @@ from api.routes import (
     auth,
     compliance,
     health,
+    markets,
+    ml,
     portfolio,
     risk,
     transactions,
@@ -36,6 +38,12 @@ api_router.include_router(
 
 # Analytics routes (auth required)
 api_router.include_router(analytics.router, prefix="/analytics", tags=["Analytics"])
+
+# Market data routes (pools, synthetics, assets) - public read access
+api_router.include_router(markets.router, prefix="/markets", tags=["Markets"])
+
+# ML prediction routes (energy forecast) - public
+api_router.include_router(ml.router, tags=["ML"])
 
 # Compliance and KYC routes
 api_router.include_router(compliance.router, tags=["Compliance"])

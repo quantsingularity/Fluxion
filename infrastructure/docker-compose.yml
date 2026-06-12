@@ -108,7 +108,7 @@ services:
       ENCRYPTION_KEY_PATH: vault:secret/data/encryption#key
       SESSION_TIMEOUT: 1800
       MAX_LOGIN_ATTEMPTS: 5
-      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost,http://localhost:80,http://localhost:8081}
     volumes:
       - app-logs:/app/logs
       - audit-logs:/app/audit
@@ -195,13 +195,14 @@ services:
       dockerfile: Dockerfile
       args:
         NODE_ENV: production
+        # Vite inlines VITE_* vars at build time. Use a relative path so the
+        # served bundle calls the API through the nginx gateway (same origin),
+        # avoiding CORS. Override for a split deployment if needed.
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api/v1}
     container_name: fluxion-frontend
     restart: unless-stopped
     environment:
       NODE_ENV: production
-      REACT_APP_API_URL: ${API_URL:-http://localhost:5000}
-      REACT_APP_ENVIRONMENT: production
-      GENERATE_SOURCEMAP: "false"
     depends_on:
       api:
         condition: service_healthy

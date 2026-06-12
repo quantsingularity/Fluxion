@@ -234,8 +234,14 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         return None
 
     def _get_endpoint_key(self, request: Request) -> str:
-        """Get endpoint key for rate limiting"""
-        return f"{request.method}:{request.url.path}"
+        """Get endpoint key for rate limiting.
+
+        Returns the bare URL path so it matches the keys used in
+        ``self.endpoint_rules`` — the previous "METHOD:path" format never
+        matched any configured rule, so per-endpoint limits (login,
+        register, password reset) were silently skipped.
+        """
+        return request.url.path
 
     async def _get_rate_limit_rules(
         self, request: Request, user_id: Optional[str]
@@ -304,9 +310,14 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 block_duration = rules.block_duration * 2 ** (
                     self.violation_counts[key] - 5
                 )
-                self.blocked_ips[key] = current_time + block_duration
+                # Store the block under the bare identifier (IP or user id),
+                # not the prefixed bucket key — _check_rate_limits looks up
+                # blocked_ips by client IP, so blocks stored under
+                # "ip:1.2.3.4" were never enforced.
+                identifier = key.split(":", 1)[1] if ":" in key else key
+                self.blocked_ips[identifier] = current_time + block_duration
                 logger.warning(
-                    f"IP {key} blocked for {block_duration} seconds due to rate limit violations"
+                    f"{identifier} blocked for {block_duration} seconds due to rate limit violations"
                 )
             retry_after = int(60 / bucket.refill_rate)
             raise HTTPException(

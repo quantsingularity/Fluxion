@@ -45,7 +45,7 @@ import {
   useDisclosure,
   VStack,
 } from "@chakra-ui/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   FiChevronDown,
   FiExternalLink,
@@ -58,6 +58,7 @@ import {
   FiTrendingUp,
 } from "react-icons/fi";
 import { Link as RouterLink } from "react-router-dom";
+import { poolsAPI } from "../../services/api";
 import {
   Bar,
   BarChart,
@@ -104,8 +105,36 @@ const Pools = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedPool, setSelectedPool] = useState(null);
 
-  // Mock pools data
-  const mockPools = [
+  // Format a raw numeric value as a compact currency string ("$4.2M").
+  const fmtCompact = (n) => {
+    const v = Number(n) || 0;
+    if (v >= 1e9) return `$${(v / 1e9).toFixed(1)}B`;
+    if (v >= 1e6) return `$${(v / 1e6).toFixed(1)}M`;
+    if (v >= 1e3) return `$${(v / 1e3).toFixed(1)}K`;
+    return `$${v.toFixed(0)}`;
+  };
+
+  // Map a backend pool record (markets/pools) into the shape this page renders.
+  const normalizePool = (p) => ({
+    id: p.id,
+    name: p.name || p.pair,
+    assets: p.assets || (p.pair ? p.pair.split("/") : []),
+    weights: p.weights || [],
+    tvl: fmtCompact(p.tvl),
+    tvlValue: Number(p.tvl) || 0,
+    volume24h: fmtCompact(p.volume_24h),
+    volumeValue: Number(p.volume_24h) || 0,
+    apy: `${(Number(p.apr) || 0).toFixed(1)}%`,
+    apyValue: Number(p.apr) || 0,
+    fee: `${((Number(p.fee) || 0) * 100).toFixed(2)}%`,
+    type: p.verified ? "weighted" : "stable",
+    creator: p.creator || "0x0000...0000",
+    myLiquidity: "$0",
+    hasStaked: false,
+  });
+
+  // Fallback pool data (used until the API responds, or if it is unavailable).
+  const fallbackPools = [
     {
       id: "pool-1",
       name: "ETH-USDC",
@@ -193,8 +222,32 @@ const Pools = () => {
     },
   ];
 
+  // Live pool data, seeded with the fallback set and replaced once the API
+  // responds. If the backend is unavailable, the fallback data keeps the UI
+  // functional.
+  const [pools, setPools] = useState(fallbackPools);
+
+  useEffect(() => {
+    let active = true;
+    poolsAPI
+      .getAllPools()
+      .then((res) => {
+        const items = res?.data?.data ?? res?.data ?? [];
+        if (active && Array.isArray(items) && items.length > 0) {
+          setPools(items.map(normalizePool));
+        }
+      })
+      .catch(() => {
+        // Keep fallback data on error.
+      });
+    return () => {
+      active = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Filter and sort pools
-  const filteredPools = mockPools
+  const filteredPools = pools
     .filter((pool) => {
       // Filter by search query
       if (

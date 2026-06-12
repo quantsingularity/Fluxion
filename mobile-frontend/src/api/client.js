@@ -2,16 +2,22 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import Constants from "expo-constants";
 
+// API version prefix - the backend mounts all routes under /api/v1.
+const API_VERSION_PREFIX = "/api/v1";
+
 // Get API configuration from environment or use defaults
 const getApiBaseUrl = () => {
   // Try to get from expo constants first (for managed workflow)
   const expoConfig = Constants.expoConfig || Constants.manifest;
-  if (expoConfig?.extra?.apiBaseUrl) {
-    return expoConfig.extra.apiBaseUrl;
-  }
+  const root =
+    expoConfig?.extra?.apiBaseUrl ||
+    (__DEV__ ? "http://localhost:8000" : "https://api.fluxion.io");
 
-  // Fallback to default development URL
-  return __DEV__ ? "http://localhost:8000" : "https://api.fluxion.io";
+  // Avoid double-prefixing if the configured URL already includes the version.
+  const trimmed = root.replace(/\/+$/, "");
+  return trimmed.endsWith(API_VERSION_PREFIX)
+    ? trimmed
+    : `${trimmed}${API_VERSION_PREFIX}`;
 };
 
 const API_BASE_URL = getApiBaseUrl();
@@ -117,6 +123,16 @@ const retryRequest = async (requestFn, retries = 3, delay = 1000) => {
 
 // API Functions
 
+// The backend wraps list/detail responses as { success, data, total }. This
+// returns the inner `data` payload so screens receive the array/object they
+// expect (and still works if a raw payload is returned instead).
+const unwrap = (payload) => {
+  if (payload && typeof payload === "object" && "data" in payload) {
+    return payload.data;
+  }
+  return payload;
+};
+
 /**
  * Predict energy consumption
  * @param {Array<string>} timestamps - ISO 8601 formatted timestamps
@@ -153,9 +169,9 @@ export const predictEnergy = async (timestamps, meterIds, contextFeatures) => {
 export const fetchAssets = async (params = {}) => {
   try {
     const response = await retryRequest(() =>
-      apiClient.get("/assets", { params }),
+      apiClient.get("/markets/assets", { params }),
     );
-    return response.data;
+    return unwrap(response.data);
   } catch (error) {
     console.error(
       "API Error (fetchAssets):",
@@ -173,9 +189,9 @@ export const fetchAssets = async (params = {}) => {
 export const fetchAssetById = async (assetId) => {
   try {
     const response = await retryRequest(() =>
-      apiClient.get(`/assets/${assetId}`),
+      apiClient.get(`/markets/assets/${assetId}`),
     );
-    return response.data;
+    return unwrap(response.data);
   } catch (error) {
     console.error(
       "API Error (fetchAssetById):",
@@ -195,9 +211,9 @@ export const fetchAssetById = async (assetId) => {
 export const fetchPools = async (params = {}) => {
   try {
     const response = await retryRequest(() =>
-      apiClient.get("/pools", { params }),
+      apiClient.get("/markets/pools", { params }),
     );
-    return response.data;
+    return unwrap(response.data);
   } catch (error) {
     console.error(
       "API Error (fetchPools):",
@@ -215,9 +231,9 @@ export const fetchPools = async (params = {}) => {
 export const fetchPoolById = async (poolId) => {
   try {
     const response = await retryRequest(() =>
-      apiClient.get(`/pools/${poolId}`),
+      apiClient.get(`/markets/pools/${poolId}`),
     );
-    return response.data;
+    return unwrap(response.data);
   } catch (error) {
     console.error(
       "API Error (fetchPoolById):",
@@ -238,11 +254,11 @@ export const fetchPoolById = async (poolId) => {
 export const fetchAssetPriceHistory = async (assetId, timeframe = "24h") => {
   try {
     const response = await retryRequest(() =>
-      apiClient.get(`/assets/${assetId}/price-history`, {
+      apiClient.get(`/markets/assets/${assetId}/price-history`, {
         params: { timeframe },
       }),
     );
-    return response.data;
+    return unwrap(response.data);
   } catch (error) {
     console.error(
       "API Error (fetchAssetPriceHistory):",
@@ -261,7 +277,7 @@ export const fetchAssetPriceHistory = async (assetId, timeframe = "24h") => {
  */
 export const createOrder = async (orderData) => {
   try {
-    const response = await apiClient.post("/orders", orderData);
+    const response = await apiClient.post("/transactions/", orderData);
     return response.data;
   } catch (error) {
     console.error(
@@ -280,7 +296,7 @@ export const createOrder = async (orderData) => {
 export const fetchUserOrders = async (params = {}) => {
   try {
     const response = await retryRequest(() =>
-      apiClient.get("/orders", { params }),
+      apiClient.get("/transactions/", { params }),
     );
     return response.data;
   } catch (error) {
@@ -298,8 +314,8 @@ export const fetchUserOrders = async (params = {}) => {
  */
 export const fetchPortfolio = async () => {
   try {
-    const response = await retryRequest(() => apiClient.get("/portfolio"));
-    return response.data;
+    const response = await retryRequest(() => apiClient.get("/portfolio/"));
+    return unwrap(response.data);
   } catch (error) {
     console.error(
       "API Error (fetchPortfolio):",
@@ -345,7 +361,7 @@ export const authenticateUser = async (address, signature) => {
  */
 export const getHealthStatus = async () => {
   try {
-    const response = await apiClient.get("/health");
+    const response = await apiClient.get("/health/");
     return response.data;
   } catch (error) {
     console.error(

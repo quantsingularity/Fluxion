@@ -349,6 +349,8 @@ class JWTService:
                 token,
                 self.secret_key,
                 algorithms=[self.algorithm],
+                audience=self.audience,
+                issuer=self.issuer,
                 options={"verify_exp": False, "verify_signature": True},
             )
             claims = self._parse_token_claims(payload)

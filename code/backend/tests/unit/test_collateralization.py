@@ -86,7 +86,6 @@ class TestOraclePrice:
 
 class TestMint:
     def test_valid_mint_creates_position(self):
-        engine = fresh_engine(price=100.0)
         # collateral = 3000 USDC, synthetic = 1000 tokens
         # collateralUSD = 3000 × 100 / 1 = 300 000
         # syntheticUSD  = 1000 × 1 (peg)

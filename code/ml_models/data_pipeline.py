@@ -106,7 +106,6 @@ _ROBUST_FEATURES = [
     "volume_momentum",
     "liquidity_zscore_30",
     "buy_sell_imbalance",
-    "pool_utilisation",
     "beta_30",
     "correlation_30",
 ]
@@ -118,6 +117,9 @@ _MINMAX_FEATURES = [
     "atl_distance",
     "depth_imbalance",
     "vol_regime",  # 0 = low vol, 1 = high vol (normalised σ)
+    # Bounded [0, 1] utilisation ratio. Previously listed under
+    # _ROBUST_FEATURES, where RobustScaler destroyed its bounds.
+    "pool_utilisation",
 ]
 
 # Binary / one-hot flags — passed through unchanged
@@ -346,11 +348,16 @@ class DataPipeline:
         liq_roll_std = l.rolling(cfg.long_window).std().replace(0, np.nan)
         out["liquidity_zscore_30"] = (l - liq_roll_mean) / liq_roll_std
 
+        # Proxy: volume / liquidity (capped at 1). Used wherever the raw
+        # pool_utilisation column is absent or NaN — _ingest adds optional
+        # columns as all-NaN, so a simple presence check would keep an
+        # all-NaN column and the final dropna would discard every row.
+        util_proxy = (v / l.replace(0, np.nan)).clip(0, 1)
         if "pool_utilisation" in df.columns:
-            out["pool_utilisation"] = df["pool_utilisation"].astype(float).clip(0, 1)
+            util_raw = df["pool_utilisation"].astype(float).clip(0, 1)
+            out["pool_utilisation"] = util_raw.fillna(util_proxy).fillna(0)
         else:
-            # Proxy: volume / liquidity (capped at 1)
-            out["pool_utilisation"] = (v / l.replace(0, np.nan)).clip(0, 1).fillna(0)
+            out["pool_utilisation"] = util_proxy.fillna(0)
 
         # Depth imbalance proxy (ask / bid normalised via VWAP deviation)
         out["depth_imbalance"] = (

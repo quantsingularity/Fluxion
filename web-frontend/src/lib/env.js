@@ -44,7 +44,7 @@ function getEnv(key, fallback = undefined) {
 export const env = {
   POOL_MANAGER_ADDRESS: () => getEnv("VITE_POOL_MANAGER_ADDRESS", ZERO_ADDRESS),
   FACTORY_ADDRESS: () => getEnv("VITE_FACTORY_ADDRESS", ZERO_ADDRESS),
-  API_BASE_URL: () => getEnv("VITE_API_BASE_URL", "/api"),
+  API_BASE_URL: () => getEnv("VITE_API_BASE_URL", "/api/v1"),
   get: getEnv,
 };
 

@@ -24,25 +24,41 @@ api.interceptors.request.use(
   },
 );
 
-// Add response interceptor for error handling
+// Add response interceptor for error handling and one-shot token refresh
 api.interceptors.response.use(
-  (response) => {
-    return response;
-  },
-  (error) => {
-    // Handle specific error cases
+  (response) => response,
+  async (error) => {
+    const original = error.config;
     if (error.response) {
-      // Server responded with error status
-      if (error.response.status === 401) {
-        // Unauthorized - clear token and redirect to login
+      // On 401, try a single refresh-and-retry before giving up.
+      if (error.response.status === 401 && original && !original._retried) {
+        original._retried = true;
+        const refreshToken = localStorage.getItem("fluxion_refresh_token");
+        if (refreshToken) {
+          try {
+            const resp = await api.post("/auth/refresh", {
+              refresh_token: refreshToken,
+            });
+            const data = resp.data?.data ?? resp.data ?? {};
+            const newAccess = data.access_token;
+            const newRefresh = data.refresh_token;
+            if (newAccess) {
+              localStorage.setItem("fluxion_token", newAccess);
+              if (newRefresh)
+                localStorage.setItem("fluxion_refresh_token", newRefresh);
+              original.headers.Authorization = `Bearer ${newAccess}`;
+              return api(original);
+            }
+          } catch {
+            // fall through to clearing tokens
+          }
+        }
         localStorage.removeItem("fluxion_token");
-        // Could dispatch an action or trigger a notification here
+        localStorage.removeItem("fluxion_refresh_token");
       }
     } else if (error.request) {
-      // Request made but no response received
       console.error("Network error, no response received");
     } else {
-      // Error in setting up the request
       console.error("Error setting up request:", error.message);
     }
     return Promise.reject(error);
@@ -50,41 +66,63 @@ api.interceptors.response.use(
 );
 
 // API endpoints
-export const marketAPI = {
-  getMarketData: () => api.get("/market/data"),
-  getTokenPrices: () => api.get("/market/prices"),
-  getHistoricalData: (params) => api.get("/market/historical", { params }),
-};
+//
+// baseURL is "/api/v1" (see env.API_BASE_URL), so paths below are relative to
+// the backend's versioned mount point. These mirror the routes the backend
+// actually serves (api/v1/router.py).
 
-export const poolsAPI = {
-  getAllPools: () => api.get("/pools"),
-  getPoolById: (id) => api.get(`/pools/${id}`),
-  createPool: (data) => api.post("/pools", data),
-  addLiquidity: (id, data) => api.post(`/pools/${id}/liquidity`, data),
-  removeLiquidity: (id, data) => api.post(`/pools/${id}/withdraw`, data),
-};
-
-export const analyticsAPI = {
-  getTVL: () => api.get("/analytics/tvl"),
-  getVolume: () => api.get("/analytics/volume"),
-  getPoolDistribution: () => api.get("/analytics/distribution"),
-  getUserStats: () => api.get("/analytics/user"),
+export const authAPI = {
+  register: (data) => api.post("/auth/register", data),
+  login: (data) => api.post("/auth/login", data),
+  logout: () => api.post("/auth/logout"),
+  refresh: (refreshToken) =>
+    api.post("/auth/refresh", { refresh_token: refreshToken }),
+  me: () => api.get("/auth/me"),
+  verifyEmail: (token) => api.post("/auth/verify-email", { token }),
+  requestPasswordReset: (email) => api.post("/auth/password-reset", { email }),
 };
 
 export const userAPI = {
-  login: (data) => api.post("/auth/login", data),
-  register: (data) => api.post("/auth/register", data),
-  getProfile: () => api.get("/user/profile"),
-  updateProfile: (data) => api.put("/user/profile", data),
-  getPositions: () => api.get("/user/positions"),
+  getProfile: () => api.get("/users/me"),
+  updateProfile: (data) => api.patch("/users/me", data),
+  getPreferences: () => api.get("/users/me/preferences"),
+  updatePreferences: (data) => api.patch("/users/me/preferences", data),
+  getSessions: () => api.get("/users/me/sessions"),
+};
+
+export const portfolioAPI = {
+  getPortfolios: () => api.get("/portfolio/"),
+  getPortfolio: (id) => api.get(`/portfolio/${id}`),
+  getPerformance: (id, params) =>
+    api.get(`/portfolio/${id}/performance`, { params }),
+  getAssets: (id) => api.get(`/portfolio/${id}/assets`),
+};
+
+export const transactionsAPI = {
+  list: (params) => api.get("/transactions/", { params }),
+  create: (data) => api.post("/transactions/", data),
+  getById: (id) => api.get(`/transactions/${id}`),
+  cancel: (id) => api.post(`/transactions/${id}/cancel`),
+};
+
+export const analyticsAPI = {
+  getOverview: () => api.get("/analytics/overview"),
+  getRisk: () => api.get("/analytics/risk"),
+  getCompliance: () => api.get("/analytics/compliance"),
+};
+
+export const poolsAPI = {
+  getAllPools: (params) => api.get("/markets/pools", { params }),
+  getPoolById: (id) => api.get(`/markets/pools/${id}`),
 };
 
 export const syntheticsAPI = {
-  getAllSynthetics: () => api.get("/synthetics"),
-  getSyntheticById: (id) => api.get(`/synthetics/${id}`),
-  mintSynthetic: (data) => api.post("/synthetics/mint", data),
-  burnSynthetic: (data) => api.post("/synthetics/burn", data),
-  getUserPositions: () => api.get("/synthetics/positions"),
+  getAllSynthetics: (params) => api.get("/markets/synthetics", { params }),
+  getSyntheticById: (id) => api.get(`/markets/synthetics/${id}`),
+};
+
+export const healthAPI = {
+  check: () => api.get("/health/"),
 };
 
 // Fallback to mock data when API is not available

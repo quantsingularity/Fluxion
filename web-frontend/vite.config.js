@@ -10,10 +10,13 @@ export default defineConfig({
   server: {
     port: 3000,
     proxy: {
+      // Forward API calls to the backend during local dev. The backend mounts
+      // all routes under /api/v1, so the path must be preserved (no rewrite).
+      // Override the target with VITE_PROXY_TARGET if the backend runs
+      // elsewhere (docker-compose maps it to :5000).
       "/api": {
-        target: "http://localhost:8000",
+        target: process.env.VITE_PROXY_TARGET || "http://localhost:8000",
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ""),
       },
     },
   },

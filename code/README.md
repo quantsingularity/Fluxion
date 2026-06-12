@@ -69,7 +69,9 @@ uvicorn app.main:app --reload --port 8000
 export POSTGRES_PASSWORD=<strong-password>
 export REDIS_PASSWORD=<strong-password>
 
-docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+# Deployment is managed from the top-level infrastructure/ directory
+cd ../infrastructure
+docker compose up -d --build
 
 # Run migrations
 docker compose exec api alembic upgrade head
@@ -168,9 +170,8 @@ code/
 │   └── requirements.txt
 ├── blockchain/               # Solidity contracts & tests
 ├── ml_models/                # ML model training & inference
-├── monitoring/               # Prometheus & Grafana configs
-├── scripts/                  # DB init & utility scripts
-├── docker-compose.yml
-├── docker-compose.prod.yml
 └── README.md
 ```
+
+> Deployment manifests (docker-compose, Kubernetes, Terraform, Ansible) and
+> database init scripts live in the top-level `infrastructure/` directory.

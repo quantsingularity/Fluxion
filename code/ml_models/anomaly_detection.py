@@ -63,11 +63,19 @@ class AnomalyDetector:
             raise ValueError("Model is not fitted yet. Call fit() first.")
         X_scaled = self.scaler.transform(X)
         if_predictions = self.isolation_forest.predict(X_scaled)
-        dbscan_labels = self.dbscan.fit_predict(X_scaled)
-        dbscan_predictions = np.where(dbscan_labels == -1, -1, 1)
-        combined_predictions = np.where(
-            (if_predictions == -1) | (dbscan_predictions == -1), -1, 1
-        )
+        # DBSCAN has no transductive predict; re-clustering an arbitrary
+        # inference batch labels most points as noise (-1) whenever the batch
+        # is small or sparse, which previously flagged normal data as
+        # anomalous. Only use DBSCAN as a secondary signal when the batch is
+        # large enough to form meaningful density clusters.
+        if len(X_scaled) >= max(self.dbscan.min_samples * 4, 50):
+            dbscan_labels = self.dbscan.fit_predict(X_scaled)
+            dbscan_predictions = np.where(dbscan_labels == -1, -1, 1)
+            combined_predictions = np.where(
+                (if_predictions == -1) & (dbscan_predictions == -1), -1, 1
+            )
+        else:
+            combined_predictions = if_predictions
         return combined_predictions
 
     def anomaly_score(self, X: Any) -> Any:

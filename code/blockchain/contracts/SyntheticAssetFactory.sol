@@ -20,6 +20,10 @@ contract SyntheticAssetFactory is Ownable, ReentrancyGuard, ChainlinkClient {
     uint256 public constant STABILITY_FEE = 200;
     uint256 public constant SECONDS_PER_YEAR = 31_536_000;
     uint256 public constant ORACLE_STALENESS = 3_600;
+    // Max share of a position's debt repayable per liquidation call (50%).
+    // Mirrors MAX_LIQUIDATION_RATIO in the off-chain CollateralEngine, which
+    // previously enforced a cap the contract did not.
+    uint256 public constant MAX_LIQUIDATION_BPS = 5_000;
 
     struct SyntheticAsset {
         address syntheticToken;
@@ -210,6 +214,10 @@ contract SyntheticAssetFactory is Ownable, ReentrancyGuard, ChainlinkClient {
 
         Position storage pos = positions[_assetId][_user];
         require(pos.syntheticMinted >= _syntheticRepaid, "Repaid exceeds debt");
+        require(
+            _syntheticRepaid * BPS <= pos.syntheticMinted * MAX_LIQUIDATION_BPS,
+            "Exceeds 50% liquidation cap"
+        );
 
         uint256 rawSeize =
             (pos.collateralDeposited * _syntheticRepaid) / pos.syntheticMinted;
