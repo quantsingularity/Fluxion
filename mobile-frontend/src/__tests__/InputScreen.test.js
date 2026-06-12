@@ -1,7 +1,14 @@
 import { NavigationContainer } from "@react-navigation/native";
 import { fireEvent, render, waitFor } from "@testing-library/react-native";
 import { Provider as PaperProvider } from "react-native-paper";
+import { predictEnergy } from "../api/client";
 import InputScreen from "../screens/InputScreen";
+
+// Mock the API client so submissions are deterministic (the real client
+// performs network calls with retry/backoff that exceed waitFor timeouts).
+jest.mock("../api/client", () => ({
+  predictEnergy: jest.fn(),
+}));
 
 // Mock the navigation
 const mockNavigation = {
@@ -38,6 +45,12 @@ jest.mock("../components/LoadingIndicator", () => {
 describe("InputScreen", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.runOnlyPendingTimers();
+    jest.useRealTimers();
   });
 
   it("renders the prediction form", () => {
@@ -69,6 +82,8 @@ describe("InputScreen", () => {
   });
 
   it("navigates to Results screen after successful submission", async () => {
+    predictEnergy.mockResolvedValue({ predictions: {}, model_version: "v1" });
+
     const { getByTestId } = render(
       <NavigationContainer>
         <PaperProvider>
@@ -88,9 +103,9 @@ describe("InputScreen", () => {
   });
 
   it("shows error message when submission fails", async () => {
-    // Mock console.error to prevent error output in tests
-    const originalConsoleError = console.error;
-    console.error = jest.fn();
+    predictEnergy.mockRejectedValue(
+      new Error("Could not fetch prediction. Please check API connection."),
+    );
 
     const { getByTestId, getByText } = render(
       <NavigationContainer>
@@ -100,11 +115,6 @@ describe("InputScreen", () => {
       </NavigationContainer>,
     );
 
-    // Simulate an error by making the navigation throw
-    mockNavigation.navigate.mockImplementationOnce(() => {
-      throw new Error("API Error");
-    });
-
     fireEvent.press(getByTestId("submit-button"));
 
     await waitFor(() => {
@@ -113,7 +123,7 @@ describe("InputScreen", () => {
       ).toBeTruthy();
     });
 
-    // Restore console.error
-    console.error = originalConsoleError;
+    // The screen should NOT navigate away on error.
+    expect(mockNavigation.navigate).not.toHaveBeenCalled();
   });
 });

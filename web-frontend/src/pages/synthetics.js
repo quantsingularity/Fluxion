@@ -1,4 +1,5 @@
 import { ethers } from "ethers";
+import { env, ZERO_ADDRESS as ZERO } from "../lib/env";
 
 export const SYNTHETIC_ABI = [
   "event SyntheticAssetCreated(address indexed assetAddress, string assetId, address oracle, bytes32 jobId, uint256 paymentAmount)",
@@ -16,8 +17,8 @@ export async function createSyntheticAsset(provider, params) {
     throw new Error("Missing provider or params for createSyntheticAsset");
   }
 
-  const factoryAddress = import.meta.env?.VITE_FACTORY_ADDRESS;
-  if (!factoryAddress) {
+  const factoryAddress = env.FACTORY_ADDRESS();
+  if (!factoryAddress || factoryAddress === ZERO) {
     throw new Error("VITE_FACTORY_ADDRESS not configured");
   }
 

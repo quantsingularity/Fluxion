@@ -22,7 +22,7 @@ import {
 import { fetchPools } from "../api/client";
 import { formatCurrency } from "../utils/formatters";
 
-const PoolsScreen = ({ navigation }) => {
+const PoolsScreen = ({ navigation: _navigation }) => {
   const theme = useTheme();
   const [pools, setPools] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -31,20 +31,8 @@ const PoolsScreen = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("tvl"); // tvl, apr, volume
 
-  // Load pools on mount
-  useEffect(() => {
-    loadPools();
-
-    // Set up auto-refresh every 30 seconds
-    const interval = setInterval(() => {
-      loadPools(true); // Silent refresh
-    }, 30000);
-
-    return () => clearInterval(interval);
-  }, [loadPools]);
-
   // Load pools from API
-  const loadPools = async (silent = false) => {
+  const loadPools = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
     setError(null);
 
@@ -72,7 +60,21 @@ const PoolsScreen = ({ navigation }) => {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, []);
+
+  // Load pools on mount and auto-refresh every 30 seconds.
+  // loadPools is memoized (useCallback with []), so this effect runs once on
+  // mount instead of on every render (which previously stacked a new interval
+  // each render).
+  useEffect(() => {
+    loadPools();
+
+    const interval = setInterval(() => {
+      loadPools(true); // Silent refresh
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [loadPools]);
 
   // Pull to refresh handler
   const onRefresh = useCallback(() => {
@@ -296,6 +298,7 @@ const PoolsScreen = ({ navigation }) => {
       <View style={styles.sortContainer}>
         <Text style={styles.sortLabel}>Sort by:</Text>
         <Chip
+          testID="sort-chip-tvl"
           selected={sortBy === "tvl"}
           onPress={() => setSortBy("tvl")}
           style={styles.sortChip}
@@ -304,6 +307,7 @@ const PoolsScreen = ({ navigation }) => {
           TVL
         </Chip>
         <Chip
+          testID="sort-chip-apr"
           selected={sortBy === "apr"}
           onPress={() => setSortBy("apr")}
           style={styles.sortChip}
@@ -312,6 +316,7 @@ const PoolsScreen = ({ navigation }) => {
           APR
         </Chip>
         <Chip
+          testID="sort-chip-volume"
           selected={sortBy === "volume"}
           onPress={() => setSortBy("volume")}
           style={styles.sortChip}

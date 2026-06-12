@@ -42,14 +42,25 @@ export const formatNumber = (value, decimals = 2) => {
 export const formatCompactNumber = (value, decimals = 2) => {
   if (value === null || value === undefined || Number.isNaN(value)) return "0";
 
-  const suffixes = ["", "K", "M", "B", "T"];
-  const tier = Math.floor(Math.log10(Math.abs(value)) / 3);
+  const numValue = Number(value);
+  // log10(0) is -Infinity, which produced "NaNundefined" for zero (and any
+  // value with |v| < 1). Treat anything below the first tier as a plain
+  // number.
+  if (numValue === 0 || Math.abs(numValue) < 1) {
+    return formatNumber(numValue, decimals);
+  }
 
-  if (tier === 0) return formatNumber(value, decimals);
+  const suffixes = ["", "K", "M", "B", "T"];
+  let tier = Math.floor(Math.log10(Math.abs(numValue)) / 3);
+  // Clamp to the available suffix range so very large values don't index
+  // past the end of the array (which would append "undefined").
+  tier = Math.max(0, Math.min(tier, suffixes.length - 1));
+
+  if (tier === 0) return formatNumber(numValue, decimals);
 
   const suffix = suffixes[tier];
   const scale = 10 ** (tier * 3);
-  const scaled = value / scale;
+  const scaled = numValue / scale;
 
   return `${scaled.toFixed(decimals)}${suffix}`;
 };

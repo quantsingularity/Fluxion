@@ -24,6 +24,40 @@ jest.mock("expo-modules-core", () => ({
   Subscription: jest.fn(),
 }));
 
+// Mock react-native-modal-datetime-picker so tests can drive onConfirm/onCancel
+// deterministically. The real modal renders nothing inspectable and its
+// onConfirm is not reachable by pressing the "Add Timestamp" button.
+jest.mock("react-native-modal-datetime-picker", () => {
+  const React = require("react");
+  const { Pressable, Text } = require("react-native");
+  return {
+    __esModule: true,
+    default: ({ isVisible, onConfirm, onCancel }) =>
+      isVisible
+        ? React.createElement(
+            React.Fragment,
+            null,
+            React.createElement(
+              Pressable,
+              {
+                testID: "datetime-confirm",
+                onPress: () => onConfirm(new Date("2024-01-01T12:00:00")),
+              },
+              React.createElement(Text, null, "confirm"),
+            ),
+            React.createElement(
+              Pressable,
+              {
+                testID: "datetime-cancel",
+                onPress: () => onCancel && onCancel(),
+              },
+              React.createElement(Text, null, "cancel"),
+            ),
+          )
+        : null,
+  };
+});
+
 // Mock react-native-vector-icons
 jest.mock(
   "react-native-vector-icons/MaterialCommunityIcons",

@@ -6,6 +6,7 @@ import {
   useEffect,
   useState,
 } from "react";
+import { env } from "./env";
 
 const POOL_MANAGER_ABI = [
   {
@@ -69,14 +70,8 @@ export function Web3Provider({ children }) {
 
   const initializeContracts = useCallback((prov) => {
     try {
-      const poolManagerAddress =
-        (typeof import.meta !== "undefined" &&
-          import.meta.env?.VITE_POOL_MANAGER_ADDRESS) ||
-        "0x0000000000000000000000000000000000000000";
-      const factoryAddress =
-        (typeof import.meta !== "undefined" &&
-          import.meta.env?.VITE_FACTORY_ADDRESS) ||
-        "0x0000000000000000000000000000000000000000";
+      const poolManagerAddress = env.POOL_MANAGER_ADDRESS();
+      const factoryAddress = env.FACTORY_ADDRESS();
       const poolManager = new ethers.Contract(
         poolManagerAddress,
         POOL_MANAGER_ABI,
@@ -152,14 +147,18 @@ export function Web3Provider({ children }) {
 
   useEffect(() => {
     let mounted = true;
+    const eth = typeof window !== "undefined" ? window.ethereum : undefined;
+    const onAccountsChangedRef = { current: null };
+    const onChainChanged = () => window.location.reload();
+
     const init = async () => {
-      if (typeof window === "undefined" || !window.ethereum) {
+      if (!eth) {
         return;
       }
       setIsLoading(true);
       setError(null);
       try {
-        const prov = new ethers.BrowserProvider(window.ethereum);
+        const prov = new ethers.BrowserProvider(eth);
         if (!mounted) return;
         setProvider(prov);
 
@@ -170,8 +169,9 @@ export function Web3Provider({ children }) {
         initializeContracts(prov);
 
         const onAccountsChanged = (accs) => handleAccountsChanged(accs, prov);
-        window.ethereum.on("accountsChanged", onAccountsChanged);
-        window.ethereum.on("chainChanged", () => window.location.reload());
+        onAccountsChangedRef.current = onAccountsChanged;
+        eth.on("accountsChanged", onAccountsChanged);
+        eth.on("chainChanged", onChainChanged);
 
         const accounts = await prov.listAccounts();
         if (!mounted) return;
@@ -190,11 +190,19 @@ export function Web3Provider({ children }) {
     init();
     return () => {
       mounted = false;
+      // Remove only the handlers this effect registered, so multiple
+      // mounts don't clobber each other's listeners (removeAllListeners
+      // would do exactly that).
       try {
-        if (window.ethereum?.removeAllListeners) {
-          window.ethereum.removeAllListeners("accountsChanged");
+        if (eth?.removeListener) {
+          if (onAccountsChangedRef.current) {
+            eth.removeListener("accountsChanged", onAccountsChangedRef.current);
+          }
+          eth.removeListener("chainChanged", onChainChanged);
         }
-      } catch (_) {}
+      } catch (err) {
+        console.error("Error removing wallet listeners:", err);
+      }
     };
   }, [handleAccountsChanged, initializeContracts]);
 

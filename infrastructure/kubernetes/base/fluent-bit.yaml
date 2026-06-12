@@ -51,13 +51,13 @@ data:
     [FILTER]
         Name    grep
         Match   kube.*
-        Regex   kubernetes.namespace_name ^({{ .Values.namespace | default "default" }}|kube-system|logging|monitoring)$
+        Regex   kubernetes.namespace_name ^(default|kube-system|logging|monitoring)$
 
     [FILTER]
         Name    modify
         Match   kube.*
-        Add     cluster_name {{ .Values.cluster.name | default "fluxion-cluster" }}
-        Add     environment {{ .Values.environment | default "production" }}
+        Add     cluster_name fluxion-cluster
+        Add     environment production
 
     # Security and compliance filters
     [FILTER]
@@ -161,7 +161,7 @@ data:
         -- Add security classification based on namespace
         if record["kubernetes"] and record["kubernetes"]["namespace_name"] then
             local namespace = record["kubernetes"]["namespace_name"]
-            if namespace == "{{ .Values.namespace | default "default" }}" then
+            if namespace == "default" then
                 new_record["security_classification"] = "financial"
                 new_record["compliance_required"] = "true"
                 new_record["retention_years"] = "7"
@@ -200,7 +200,7 @@ data:
 
         -- Add compliance metadata
         new_record["compliance_framework"] = "financial_services"
-        new_record["data_residency"] = "{{ .Values.compliance.dataResidency | default "US" }}"
+        new_record["data_residency"] = "US"
         new_record["encryption_required"] = "true"
         new_record["audit_trail"] = "enabled"
 

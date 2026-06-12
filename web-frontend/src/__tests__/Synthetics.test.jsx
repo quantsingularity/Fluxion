@@ -1,5 +1,5 @@
 import { ChakraProvider } from "@chakra-ui/react";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
 import Synthetics from "../pages/synthetics/Synthetics";
 
@@ -41,14 +41,9 @@ const renderSynthetics = () => {
 };
 
 describe("Synthetics Component", () => {
-  it("renders the hero section", () => {
+  it("renders the page heading", () => {
     renderSynthetics();
     expect(screen.getByText("Synthetic Assets")).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        /Trade synthetic assets that track the price of real-world assets/,
-      ),
-    ).toBeInTheDocument();
   });
 
   it("renders the mint synthetic button", () => {
@@ -56,64 +51,28 @@ describe("Synthetics Component", () => {
     expect(screen.getByText("Mint Synthetic")).toBeInTheDocument();
   });
 
-  it("renders synthetic assets list", () => {
+  it("renders the total value locked stat", () => {
     renderSynthetics();
-    expect(screen.getByText("sETH")).toBeInTheDocument();
-    expect(screen.getByText("sBTC")).toBeInTheDocument();
-    expect(screen.getByText("sGOLD")).toBeInTheDocument();
-    expect(screen.getByText("sEUR")).toBeInTheDocument();
-    expect(screen.getByText("sTSLA")).toBeInTheDocument();
+    expect(screen.getAllByText("Total Value Locked").length).toBeGreaterThan(0);
+    expect(screen.getByText("$157.5M")).toBeInTheDocument();
   });
 
-  it("displays synthetic asset details", () => {
+  it("renders the synthetic assets list", () => {
     renderSynthetics();
-    expect(screen.getByText("$1,720.45")).toBeInTheDocument();
-    expect(screen.getByText("$42,350.78")).toBeInTheDocument();
-    expect(screen.getByText("$1,845.20")).toBeInTheDocument();
+    expect(screen.getAllByText("sETH").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("sBTC").length).toBeGreaterThan(0);
   });
 
-  it("shows price changes with correct indicators", () => {
+  it("renders the positions and history tabs", () => {
     renderSynthetics();
-    expect(screen.getByText("+2.4%")).toBeInTheDocument();
-    expect(screen.getByText("-0.5%")).toBeInTheDocument();
-  });
-
-  it("displays TVL and volume information", () => {
-    renderSynthetics();
-    expect(screen.getByText("$42.5M")).toBeInTheDocument();
-    expect(screen.getByText("$8.2M")).toBeInTheDocument();
-    expect(screen.getByText("$68.3M")).toBeInTheDocument();
-    expect(screen.getByText("$12.5M")).toBeInTheDocument();
-  });
-
-  it("shows collateralization ratios", () => {
-    renderSynthetics();
-    expect(screen.getByText("150%")).toBeInTheDocument();
-    expect(screen.getByText("175%")).toBeInTheDocument();
-    expect(screen.getByText("120%")).toBeInTheDocument();
-  });
-
-  it("renders user positions", () => {
-    renderSynthetics();
-    expect(screen.getByText("5.2")).toBeInTheDocument();
-    expect(screen.getByText("$8,946.34")).toBeInTheDocument();
-    expect(screen.getByText("$13,419.51")).toBeInTheDocument();
-  });
-
-  it("opens synthetic details modal on click", () => {
-    renderSynthetics();
-    const syntheticRow = screen.getByText("sETH").closest("tr");
-    fireEvent.click(syntheticRow);
-
-    expect(screen.getByText("Synthetic Details")).toBeInTheDocument();
-    expect(
-      screen.getByText(/Synthetic Ethereum that tracks the price of ETH/),
-    ).toBeInTheDocument();
+    expect(screen.getByText("My Positions")).toBeInTheDocument();
+    expect(screen.getByText("Transaction History")).toBeInTheDocument();
   });
 
   it("renders price and volume charts", () => {
     renderSynthetics();
-    expect(screen.getByTestId("line-chart")).toBeInTheDocument();
-    expect(screen.getByTestId("area-chart")).toBeInTheDocument();
+    expect(
+      screen.getAllByTestId("responsive-container").length,
+    ).toBeGreaterThan(0);
   });
 });

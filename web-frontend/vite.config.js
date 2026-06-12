@@ -25,16 +25,20 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor: [
-            "react",
-            "react-dom",
-            "react-router-dom",
+          // Split the previously monolithic 1.2MB vendor chunk into logical
+          // groups so the browser can cache and load them independently.
+          "react-vendor": ["react", "react-dom", "react-router-dom"],
+          "ui-vendor": [
             "@chakra-ui/react",
-            "recharts",
-            "ethers",
+            "@emotion/react",
+            "@emotion/styled",
+            "framer-motion",
           ],
+          "chart-vendor": ["recharts"],
+          "web3-vendor": ["ethers"],
         },
       },
     },
+    chunkSizeWarningLimit: 800,
   },
 });

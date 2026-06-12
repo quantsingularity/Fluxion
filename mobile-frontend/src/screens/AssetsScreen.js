@@ -19,9 +19,10 @@ import {
   useTheme,
 } from "react-native-paper";
 import { fetchAssets } from "../api/client";
+import { withAlpha } from "../utils/colors";
 import { formatCurrency } from "../utils/formatters";
 
-const AssetsScreen = ({ navigation }) => {
+const AssetsScreen = ({ navigation: _navigation }) => {
   const theme = useTheme();
   const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,20 +31,8 @@ const AssetsScreen = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState("all"); // all, synthetic, derivative
 
-  // Load assets on mount
-  useEffect(() => {
-    loadAssets();
-
-    // Set up auto-refresh every 30 seconds
-    const interval = setInterval(() => {
-      loadAssets(true); // Silent refresh
-    }, 30000);
-
-    return () => clearInterval(interval);
-  }, [loadAssets]);
-
   // Load assets from API
-  const loadAssets = async (silent = false) => {
+  const loadAssets = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
     setError(null);
 
@@ -71,7 +60,20 @@ const AssetsScreen = ({ navigation }) => {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, []);
+
+  // Load assets on mount and auto-refresh every 30 seconds.
+  // loadAssets is memoized so this effect runs once on mount rather than on
+  // every render (which previously stacked a new interval each render).
+  useEffect(() => {
+    loadAssets();
+
+    const interval = setInterval(() => {
+      loadAssets(true); // Silent refresh
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [loadAssets]);
 
   // Pull to refresh handler
   const onRefresh = useCallback(() => {
@@ -130,7 +132,7 @@ const AssetsScreen = ({ navigation }) => {
                   icon={isPositive ? "trending-up" : "trending-down"}
                   style={[
                     styles.changeChip,
-                    { backgroundColor: `${changeColor}20` },
+                    { backgroundColor: withAlpha(changeColor, 0.125) },
                   ]}
                   textStyle={[styles.changeText, { color: changeColor }]}
                 >

@@ -1,4 +1,5 @@
 import { render } from "@testing-library/react-native";
+import { StyleSheet } from "react-native";
 import { Provider as PaperProvider } from "react-native-paper";
 import ResultsDisplay from "../components/ResultsDisplay";
 
@@ -106,13 +107,13 @@ describe("ResultsDisplay", () => {
     );
 
     const predictionValue = getByText("10.5000");
-    expect(predictionValue.props.style).toContainEqual({
-      color: expect.any(String),
-    });
+    expect(StyleSheet.flatten(predictionValue.props.style).color).toEqual(
+      expect.any(String),
+    );
 
     const confidenceInterval = getByText("95% CI: [9.8000, 11.2000]");
-    expect(confidenceInterval.props.style).toContainEqual({
-      color: expect.any(String),
-    });
+    expect(StyleSheet.flatten(confidenceInterval.props.style).color).toEqual(
+      expect.any(String),
+    );
   });
 });

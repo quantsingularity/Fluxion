@@ -559,7 +559,7 @@ spec:
   resources:
     requests:
       storage: 10Gi
-  storageClassName: { { .Values.storage.className | default "gp2" } }
+  storageClassName: gp2
 ---
 apiVersion: v1
 kind: ServiceAccount

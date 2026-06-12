@@ -5,7 +5,8 @@ jest.mock("../api/client", () => ({
   predictEnergy: jest.fn(),
 }));
 
-import { fireEvent, render, waitFor } from "@testing-library/react-native";
+import { fireEvent, waitFor } from "@testing-library/react-native";
+import { render } from "../test-utils";
 import { fetchAssets } from "../api/client";
 import AssetsScreen from "../screens/AssetsScreen";
 
@@ -20,6 +21,12 @@ const mockNavigation = {
 describe("AssetsScreen", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.runOnlyPendingTimers();
+    jest.useRealTimers();
   });
 
   const mockAssets = [
@@ -142,9 +149,7 @@ describe("AssetsScreen", () => {
   it("handles pull to refresh", async () => {
     fetchAssets.mockResolvedValue(mockAssets);
 
-    const { getByTestId } = render(
-      <AssetsScreen navigation={mockNavigation} />,
-    );
+    render(<AssetsScreen navigation={mockNavigation} />);
 
     await waitFor(() => {
       expect(fetchAssets).toHaveBeenCalledTimes(1);

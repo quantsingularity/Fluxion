@@ -1080,7 +1080,7 @@ const Synthetics = () => {
                                 If the value of your collateral falls below the
                                 required ratio, your position may be liquidated.
                                 This means your collateral will be sold to repay
-                                the synthetic assets you've minted.
+                                the synthetic assets you&rsquo;ve minted.
                               </Text>
                             </Box>
                           </HStack>

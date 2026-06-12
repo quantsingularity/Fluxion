@@ -505,8 +505,8 @@ const Dashboard = () => {
                     Rewards Program Coming Soon
                   </Heading>
                   <Text color={subTextColor} maxW="500px" mx="auto">
-                    We're working on an exciting rewards program for liquidity
-                    providers. Stay tuned!
+                    We&rsquo;re working on an exciting rewards program for
+                    liquidity providers. Stay tuned!
                   </Text>
                 </Box>
               </TabPanel>

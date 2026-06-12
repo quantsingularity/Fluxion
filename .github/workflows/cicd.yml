@@ -107,10 +107,10 @@ jobs:
           retention-days: 30
 
   # ============================================================
-  # Job 3 -- Web Frontend Build
+  # Job 3 -- Web Frontend Test & Build
   # ============================================================
-  frontend_build:
-    name: Frontend Build
+  web-frontend_test_and_build:
+    name: Web-Frontend Test & Build
     runs-on: ubuntu-latest
     needs: code_quality
 
@@ -132,6 +132,9 @@ jobs:
       - name: Install dependencies
         run: npm ci --legacy-peer-deps
 
+      - name: Run frontend tests
+        run: CI=true npm test
+
       - name: Build web-frontend
         run: CI=false npm run build
 
@@ -141,4 +144,44 @@ jobs:
         with:
           name: frontend-dist
           path: web-frontend/dist/
+          retention-days: 7
+
+  # ============================================================
+  # Job 4 -- Mobile Frontend (Expo) Build & Test
+  # ============================================================
+  mobile_frontend:
+    name: Mobile-Frontend Test & Build
+    runs-on: ubuntu-latest
+    needs: code_quality
+
+    defaults:
+      run:
+        working-directory: mobile-frontend
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: mobile-frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Run Mobile Tests
+        run: npm run test:ci
+
+      - name: Build Mobile Web Export
+        run: CI=false npm run build:web
+
+      - name: Upload Mobile Web Build
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-web-dist
+          path: mobile-frontend/dist/
           retention-days: 7

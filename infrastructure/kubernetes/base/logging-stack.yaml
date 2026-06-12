@@ -126,7 +126,7 @@ spec:
         resources:
           requests:
             storage: 100Gi
-        storageClassName: { { .Values.storage.className | default "gp2" } }
+        storageClassName: gp2
 ---
 apiVersion: v1
 kind: Service
@@ -153,8 +153,10 @@ metadata:
   namespace: logging
 type: Opaque
 data:
-  password: { { .Values.elasticsearch.password | b64enc } }
-  username: { { .Values.elasticsearch.username | default "elastic" | b64enc } }
+  # Base64-encoded values - replace before applying.
+  # To encode: echo -n "your-value" | base64
+  password: REPLACE_WITH_BASE64_ENCODED_ELASTICSEARCH_PASSWORD
+  username: ZWxhc3RpYw== # "elastic"
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -193,7 +195,7 @@ data:
         }
 
         # Add security classification
-        if [kubernetes][namespace] == "{{ .Values.namespace | default "default" }}" {
+        if [kubernetes][namespace] == "default" {
           mutate {
             add_field => { "security_classification" => "financial" }
             add_field => { "compliance_required" => "true" }
@@ -261,7 +263,7 @@ data:
       # Send critical alerts to external systems
       if [alert_required] == "true" or [level] == "ERROR" or [level] == "FATAL" {
         http {
-          url => "{{ .Values.alerting.webhook_url | default "http://alertmanager:9093/api/v1/alerts" }}"
+          url => "http://alertmanager:9093/api/v1/alerts"
           http_method => "post"
           format => "json"
         }
@@ -488,4 +490,6 @@ metadata:
   namespace: logging
 type: Opaque
 data:
-  encryption_key: { { .Values.kibana.encryptionKey | b64enc } }
+  # Base64-encoded 32-byte key. Generate with:
+  # openssl rand -base64 32 | tr -d '\n' | base64
+  encryption_key: REPLACE_WITH_BASE64_ENCODED_KIBANA_ENCRYPTION_KEY

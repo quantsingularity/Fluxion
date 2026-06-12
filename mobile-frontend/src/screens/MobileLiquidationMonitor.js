@@ -22,7 +22,6 @@ import {
   Modal,
   RefreshControl,
   SafeAreaView,
-  ScrollView,
   StatusBar,
   StyleSheet,
   Text,
@@ -305,7 +304,7 @@ export default function MobileLiquidationMonitor() {
     );
     pulse.start();
     return () => pulse.stop();
-  }, []);
+  }, [tickAnim]);
 
   const sortedPositions = [...state.positions].sort((a, b) => {
     if (sortBy === "crPct") return a.crPct - b.crPct;

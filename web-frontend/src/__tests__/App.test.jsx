@@ -3,6 +3,12 @@ import { render, screen } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
 import App from "../App";
 
+// Mock the web3 hook so any consumer rendered through routing does not need a
+// real Web3Provider.
+jest.mock("../lib/web3-config.jsx", () => ({
+  useWeb3: () => ({ isConnected: false, pools: [], account: null }),
+}));
+
 // Mock the components
 jest.mock("../components/layout/Navbar", () => {
   return function MockNavbar() {
@@ -13,6 +19,12 @@ jest.mock("../components/layout/Navbar", () => {
 jest.mock("../components/layout/Sidebar", () => {
   return function MockSidebar() {
     return <div data-testid="sidebar">Sidebar</div>;
+  };
+});
+
+jest.mock("../pages/home/Home", () => {
+  return function MockHome() {
+    return <div data-testid="home">Home</div>;
   };
 });
 
@@ -68,8 +80,13 @@ describe("App Component", () => {
     expect(screen.getByTestId("sidebar")).toBeInTheDocument();
   });
 
-  it("renders Dashboard on root path", () => {
+  it("renders Home on root path", () => {
     renderWithRouter(<App />, { route: "/" });
+    expect(screen.getByTestId("home")).toBeInTheDocument();
+  });
+
+  it("renders Dashboard on /dashboard path", () => {
+    renderWithRouter(<App />, { route: "/dashboard" });
     expect(screen.getByTestId("dashboard")).toBeInTheDocument();
   });
 

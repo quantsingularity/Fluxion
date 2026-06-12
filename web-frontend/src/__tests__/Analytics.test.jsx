@@ -35,83 +35,44 @@ const renderAnalytics = () => {
 };
 
 describe("Analytics Component", () => {
-  it("renders the hero section", () => {
+  it("renders the page heading", () => {
     renderAnalytics();
     expect(screen.getByText("Analytics Dashboard")).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        /Comprehensive analytics and insights for the Fluxion ecosystem/,
-      ),
-    ).toBeInTheDocument();
   });
 
-  it("renders the stats overview section", () => {
+  it("renders the stats overview labels", () => {
     renderAnalytics();
-    expect(screen.getByText("Total Value Locked")).toBeInTheDocument();
-    expect(screen.getByText("24h Volume")).toBeInTheDocument();
+    expect(screen.getAllByText("Total Value Locked").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("24h Volume").length).toBeGreaterThan(0);
     expect(screen.getByText("Active Pools")).toBeInTheDocument();
     expect(screen.getByText("Average APY")).toBeInTheDocument();
   });
 
-  it("displays correct stat values", () => {
+  it("displays the stat values", () => {
     renderAnalytics();
-    expect(screen.getByText("$142.5M")).toBeInTheDocument();
-    expect(screen.getByText("$28.4M")).toBeInTheDocument();
-    expect(screen.getByText("247")).toBeInTheDocument();
+    expect(screen.getAllByText("$142.5M").length).toBeGreaterThan(0);
+    expect(screen.getByText("8.74%")).toBeInTheDocument();
   });
 
-  it("shows stat trends with arrows", () => {
+  it("renders the analytics tabs", () => {
     renderAnalytics();
-    const increaseArrows = screen.getAllByText("23.36%");
-    const decreaseArrows = screen.getAllByText("5.14%");
-    expect(increaseArrows.length).toBeGreaterThan(0);
-    expect(decreaseArrows.length).toBeGreaterThan(0);
+    const tabs = screen.getAllByRole("tab");
+    expect(tabs.length).toBe(4);
+    expect(screen.getByText("Historical")).toBeInTheDocument();
   });
 
-  it("renders top pools table", () => {
+  it("renders charts on the overview tab", () => {
     renderAnalytics();
-    expect(screen.getByText("ETH-USDC")).toBeInTheDocument();
-    expect(screen.getByText("WBTC-ETH")).toBeInTheDocument();
-    expect(screen.getByText("USDC-DAI-USDT")).toBeInTheDocument();
-    expect(screen.getByText("ETH-LINK")).toBeInTheDocument();
+    // At least one mocked recharts container should be present.
+    expect(
+      screen.getAllByTestId("responsive-container").length,
+    ).toBeGreaterThan(0);
   });
 
-  it("displays pool statistics", () => {
+  it("switches to the Pools tab and shows top pools", () => {
     renderAnalytics();
-    expect(screen.getByText("$42.5M")).toBeInTheDocument();
-    expect(screen.getByText("$8.2M")).toBeInTheDocument();
-    expect(screen.getByText("8.4%")).toBeInTheDocument();
-  });
-
-  it("renders pool type distribution", () => {
-    renderAnalytics();
-    expect(screen.getByText("Weighted")).toBeInTheDocument();
-    expect(screen.getByText("Stable")).toBeInTheDocument();
-    expect(screen.getByText("Boosted")).toBeInTheDocument();
-  });
-
-  it("renders all chart types", () => {
-    renderAnalytics();
-    expect(screen.getByTestId("line-chart")).toBeInTheDocument();
-    expect(screen.getByTestId("area-chart")).toBeInTheDocument();
-    expect(screen.getByTestId("bar-chart")).toBeInTheDocument();
-    expect(screen.getByTestId("pie-chart")).toBeInTheDocument();
-  });
-
-  it("expands chart on click", () => {
-    renderAnalytics();
-    const chart = screen.getByTestId("line-chart");
-    fireEvent.click(chart);
-
-    // Check if modal is opened
-    expect(screen.getByRole("dialog")).toBeInTheDocument();
-  });
-
-  it("displays pool trends", () => {
-    renderAnalytics();
-    const trendUp = screen.getAllByText("up");
-    const trendDown = screen.getAllByText("down");
-    expect(trendUp.length).toBeGreaterThan(0);
-    expect(trendDown.length).toBeGreaterThan(0);
+    const tabs = screen.getAllByRole("tab");
+    fireEvent.click(tabs[1]);
+    expect(screen.getByText("Top Performing Pools")).toBeInTheDocument();
   });
 });

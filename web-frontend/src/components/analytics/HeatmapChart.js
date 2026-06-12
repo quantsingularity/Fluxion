@@ -1,6 +1,5 @@
 // HeatmapChart - built with recharts (no extra deps needed)
 import {
-  Cell,
   Rectangle,
   ResponsiveContainer,
   Tooltip,

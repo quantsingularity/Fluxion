@@ -217,8 +217,8 @@ const Settings = () => {
                     <FormLabel>Email Address</FormLabel>
                     <Input placeholder="Enter your email (optional)" />
                     <Text fontSize="xs" color={subTextColor} mt={1}>
-                      Used for notifications and alerts only. We'll never share
-                      your email.
+                      Used for notifications and alerts only. We&rsquo;ll never
+                      share your email.
                     </Text>
                   </FormControl>
                 </VStack>

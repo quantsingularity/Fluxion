@@ -16,6 +16,12 @@ describe("PredictionForm", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.runOnlyPendingTimers();
+    jest.useRealTimers();
   });
 
   it("renders all form elements", () => {
@@ -65,20 +71,17 @@ describe("PredictionForm", () => {
   });
 
   it("submits form with valid data", async () => {
-    const { getByText, getByPlaceholderText } = render(
+    const { getByText, getByTestId, getByPlaceholderText } = render(
       <PaperProvider>
         <PredictionForm {...defaultProps} />
       </PaperProvider>,
     );
 
-    // Add a timestamp
-    const addButton = getByText("Add Timestamp");
-    fireEvent.press(addButton);
+    // Open the date picker and confirm a date through the mocked modal.
+    fireEvent.press(getByText("Add Timestamp"));
+    fireEvent.press(getByTestId("datetime-confirm"));
 
-    // Mock the date picker confirmation
     const mockDate = new Date("2024-01-01T12:00:00");
-    const datePicker = getByText("Add Timestamp");
-    fireEvent(datePicker, "onConfirm", mockDate);
 
     // Fill in meter IDs
     const meterInput = getByPlaceholderText("meter1, meter2, meter3");
@@ -109,32 +112,36 @@ describe("PredictionForm", () => {
       </PaperProvider>,
     );
 
-    const submitButton = getByText("Getting Prediction...");
-    expect(submitButton.props.disabled).toBe(true);
+    // The label has no `disabled` prop; the disabled state lives on the
+    // touchable ancestor that carries accessibilityRole="button".
+    let node = getByText("Getting Prediction...");
+    while (node && node.props?.accessibilityRole !== "button") {
+      node = node.parent;
+    }
+    expect(node).toBeTruthy();
+    expect(node.props.accessibilityState?.disabled).toBe(true);
   });
 
   it("removes timestamp when clicking close on chip", () => {
-    const { getByText, queryByText } = render(
+    const { getByText, getByTestId, getByLabelText, queryByText } = render(
       <PaperProvider>
         <PredictionForm {...defaultProps} />
       </PaperProvider>,
     );
 
-    // Add a timestamp
-    const addButton = getByText("Add Timestamp");
-    fireEvent.press(addButton);
+    // Open the date picker and confirm a date through the mocked modal.
+    fireEvent.press(getByText("Add Timestamp"));
+    fireEvent.press(getByTestId("datetime-confirm"));
 
-    // Mock the date picker confirmation
     const mockDate = new Date("2024-01-01T12:00:00");
-    const datePicker = getByText("Add Timestamp");
-    fireEvent(datePicker, "onConfirm", mockDate);
 
-    // Find and click the close button on the chip
-    const chip = getByText(mockDate.toISOString());
-    const closeButton = chip.parent.props.onClose;
-    fireEvent(closeButton);
+    // The chip is rendered with the (mocked) ISO-formatted date.
+    expect(getByText(mockDate.toISOString())).toBeTruthy();
 
-    // Verify the timestamp was removed
+    // Press the chip's close affordance (Paper labels it "Close" by default).
+    fireEvent.press(getByLabelText("Close"));
+
+    // Verify the timestamp was removed.
     expect(queryByText(mockDate.toISOString())).toBeNull();
   });
 });

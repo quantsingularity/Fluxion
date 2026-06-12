@@ -36,7 +36,9 @@ else
 fi
 
 if [ -f "docker-compose.yml" ]; then
-  if docker compose config -q 2>/dev/null; then
+  if ! command -v docker &>/dev/null; then
+    warn "Skipping docker-compose.yml validation — Docker not installed"
+  elif docker compose config -q 2>/dev/null; then
     pass "docker-compose.yml is valid"
   else
     fail "docker-compose.yml has syntax errors"

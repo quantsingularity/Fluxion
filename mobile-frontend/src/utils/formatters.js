@@ -1,10 +1,12 @@
 // mobile-frontend/src/utils/formatters.js
 
 export const formatCurrency = (value, currency = "USD", locale = "en-US") => {
+  const num = Number(value);
+  const safe = Number.isFinite(num) ? num : 0;
   return new Intl.NumberFormat(locale, {
     style: "currency",
     currency: currency,
-  }).format(value);
+  }).format(safe);
 };
 
 export const formatDate = (date, locale = "en-US", options = {}) => {
@@ -22,10 +24,12 @@ export const formatDate = (date, locale = "en-US", options = {}) => {
 };
 
 export const truncateText = (text, maxLength) => {
-  if (text.length <= maxLength) {
-    return text;
+  if (text == null) return "";
+  const str = String(text);
+  if (str.length <= maxLength) {
+    return str;
   }
-  return `${text.substr(0, maxLength)}...`;
+  return `${str.substr(0, maxLength)}...`;
 };
 
 export const capitalizeFirstLetter = (string) => {

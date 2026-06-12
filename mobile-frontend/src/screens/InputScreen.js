@@ -34,34 +34,6 @@ const InputScreen = ({ navigation }) => {
         err.message ||
           "Could not fetch prediction. Please check API connection.",
       );
-
-      // If in development mode, provide fallback mock data for testing
-      if (__DEV__) {
-        console.log("Development mode: Using mock data as fallback");
-        const mockResults = {
-          predictions: {
-            meter1: [10.5, 11.2],
-            meter2: [20.1, 21.3],
-            meter3: [5.5, 6.0],
-          },
-          confidence_intervals: {
-            meter1: [
-              [9.8, 11.2],
-              [10.5, 11.9],
-            ],
-            meter2: [
-              [19.0, 21.2],
-              [20.0, 22.6],
-            ],
-            meter3: [
-              [5.0, 6.0],
-              [5.5, 6.5],
-            ],
-          },
-          model_version: "fluxora-v1.2-lstm",
-        };
-        navigation.navigate("Results", { predictionData: mockResults });
-      }
     } finally {
       setIsLoading(false);
     }

@@ -5,7 +5,8 @@ jest.mock("../api/client", () => ({
   predictEnergy: jest.fn(),
 }));
 
-import { fireEvent, render, waitFor } from "@testing-library/react-native";
+import { fireEvent, waitFor } from "@testing-library/react-native";
+import { render } from "../test-utils";
 import { fetchPools } from "../api/client";
 import PoolsScreen from "../screens/PoolsScreen";
 
@@ -20,6 +21,12 @@ const mockNavigation = {
 describe("PoolsScreen", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.runOnlyPendingTimers();
+    jest.useRealTimers();
   });
 
   const mockPools = [
@@ -113,14 +120,16 @@ describe("PoolsScreen", () => {
   it("sorts pools by APR when APR chip is pressed", async () => {
     fetchPools.mockResolvedValue(mockPools);
 
-    const { getByText } = render(<PoolsScreen navigation={mockNavigation} />);
+    const { getByText, getByTestId } = render(
+      <PoolsScreen navigation={mockNavigation} />,
+    );
 
     await waitFor(() => {
       expect(getByText("synBTC/synUSD")).toBeTruthy();
     });
 
-    // Click APR sort chip
-    const aprChip = getByText("APR");
+    // Click APR sort chip (targeted by testID; "APR" also appears on each card)
+    const aprChip = getByTestId("sort-chip-apr");
     fireEvent.press(aprChip);
 
     // Pools should now be sorted by APR
@@ -168,7 +177,7 @@ describe("PoolsScreen", () => {
   it("handles pull to refresh", async () => {
     fetchPools.mockResolvedValue(mockPools);
 
-    const {} = render(<PoolsScreen navigation={mockNavigation} />);
+    render(<PoolsScreen navigation={mockNavigation} />);
 
     await waitFor(() => {
       expect(fetchPools).toHaveBeenCalledTimes(1);

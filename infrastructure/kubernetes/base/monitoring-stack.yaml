@@ -20,8 +20,8 @@ data:
       scrape_interval: 15s
       evaluation_interval: 15s
       external_labels:
-        cluster: {{ .Values.cluster.name | default "fluxion-cluster" }}
-        environment: {{ .Values.environment | default "production" }}
+        cluster: fluxion-cluster
+        environment: production
 
     rule_files:
       - "/etc/prometheus/rules/*.yml"
@@ -101,11 +101,11 @@ data:
           - role: pod
             namespaces:
               names:
-                - {{ .Values.namespace | default "default" }}
+                - default
         relabel_configs:
           - source_labels: [__meta_kubernetes_pod_label_app]
             action: keep
-            regex: {{ .Values.appName }}-backend
+            regex: fluxion-backend
           - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
             action: keep
             regex: true
@@ -287,7 +287,7 @@ spec:
   resources:
     requests:
       storage: 50Gi
-  storageClassName: { { .Values.storage.className | default "gp2" } }
+  storageClassName: gp2
 ---
 apiVersion: v1
 kind: Service

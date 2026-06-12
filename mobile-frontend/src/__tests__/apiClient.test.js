@@ -1,5 +1,27 @@
-// Mock dependencies before importing the module
-jest.mock("axios");
+// Mock dependencies before importing the module.
+// axios is mocked with a factory so axios.create() returns an instance that
+// exposes interceptors and the HTTP verb methods. The bare jest.mock("axios")
+// auto-mock returned undefined from create(), so module import crashed at
+// `apiClient.interceptors.request.use(...)` and the whole suite failed to run.
+jest.mock("axios", () => {
+  const mockInstance = {
+    interceptors: {
+      request: { use: jest.fn() },
+      response: { use: jest.fn() },
+    },
+    get: jest.fn(() => Promise.resolve({ data: {} })),
+    post: jest.fn(() => Promise.resolve({ data: {} })),
+    put: jest.fn(() => Promise.resolve({ data: {} })),
+    delete: jest.fn(() => Promise.resolve({ data: {} })),
+  };
+  return {
+    __esModule: true,
+    default: {
+      create: jest.fn(() => mockInstance),
+    },
+    create: jest.fn(() => mockInstance),
+  };
+});
 jest.mock("@react-native-async-storage/async-storage", () => ({
   setItem: jest.fn(() => Promise.resolve()),
   getItem: jest.fn(() => Promise.resolve(null)),

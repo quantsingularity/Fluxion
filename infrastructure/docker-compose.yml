@@ -79,7 +79,7 @@ services:
   # Backend API service with enhanced security
   api:
     build:
-      context: ./code/backend
+      context: ../code/backend
       dockerfile: Dockerfile
       args:
         NODE_ENV: production
@@ -191,7 +191,7 @@ services:
   # Web frontend with security headers
   web-frontend:
     build:
-      context: ./code/web-frontend
+      context: ../web-frontend
       dockerfile: Dockerfile
       args:
         NODE_ENV: production
@@ -261,7 +261,7 @@ services:
   # ML model service with security
   ml-service:
     build:
-      context: ./code/ml_models
+      context: ../code/ml_models
       dockerfile: Dockerfile
       args:
         PYTHON_ENV: production

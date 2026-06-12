@@ -69,7 +69,6 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { useWeb3 } from "../../lib/web3-config.jsx";
 
 // Mock data for charts
 const volumeData = [
@@ -91,7 +90,6 @@ const apyData = [
 ];
 
 const Pools = () => {
-  const { isConnected } = useWeb3();
   const cardBg = useColorModeValue("gray.800", "gray.700");
   const borderColor = useColorModeValue("gray.700", "gray.600");
   const subTextColor = useColorModeValue("gray.400", "gray.400");

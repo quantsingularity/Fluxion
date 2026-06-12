@@ -8,6 +8,7 @@ const ResultsScreen = ({ route, navigation }) => {
 
   return (
     <SafeAreaView
+      testID="safe-area"
       style={[styles.safeArea, { backgroundColor: theme.colors.background }]}
     >
       <View style={styles.container}>

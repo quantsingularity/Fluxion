@@ -1,43 +1,61 @@
-import { render } from "@testing-library/react-native";
+import { render, waitFor } from "@testing-library/react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import App from "../../App";
 
-// Mock the navigation components
-jest.mock("@react-navigation/native", () => ({
-  NavigationContainer: ({ children }) => children,
-}));
+// Mock the screens so the test focuses on App's navigation shell, not screen
+// internals (which make API calls and have their own tests).
+jest.mock("../../src/screens/InputScreen", () => {
+  const { Text } = require("react-native");
+  return function MockInputScreen() {
+    return <Text>InputScreen</Text>;
+  };
+});
+jest.mock("../../src/screens/ResultsScreen", () => {
+  const { Text } = require("react-native");
+  return function MockResultsScreen() {
+    return <Text>ResultsScreen</Text>;
+  };
+});
+jest.mock("../../src/screens/AssetsScreen", () => {
+  const { Text } = require("react-native");
+  return function MockAssetsScreen() {
+    return <Text>AssetsScreen</Text>;
+  };
+});
+jest.mock("../../src/screens/PoolsScreen", () => {
+  const { Text } = require("react-native");
+  return function MockPoolsScreen() {
+    return <Text>PoolsScreen</Text>;
+  };
+});
 
-jest.mock("@react-navigation/native-stack", () => ({
-  createNativeStackNavigator: () => ({
-    Navigator: ({ children }) => children,
-    Screen: ({ children }) => children,
-  }),
-}));
-
-jest.mock("@react-navigation/bottom-tabs", () => ({
-  createBottomTabNavigator: () => ({
-    Navigator: ({ children }) => children,
-    Screen: ({ children }) => children,
-  }),
-}));
-
-// Mock the screens
-jest.mock("../../src/screens/InputScreen", () => "InputScreen");
-jest.mock("../../src/screens/ResultsScreen", () => "ResultsScreen");
-jest.mock("../../src/screens/AssetsScreen", () => "AssetsScreen");
-jest.mock("../../src/screens/PoolsScreen", () => "PoolsScreen");
+const renderApp = () =>
+  render(
+    <SafeAreaProvider
+      initialMetrics={{
+        frame: { x: 0, y: 0, width: 390, height: 844 },
+        insets: { top: 47, left: 0, right: 0, bottom: 34 },
+      }}
+    >
+      <App />
+    </SafeAreaProvider>,
+  );
 
 describe("App Component", () => {
-  it("renders without crashing", () => {
-    const { getByText } = render(<App />);
-    expect(getByText("Prediction")).toBeTruthy();
-    expect(getByText("Assets")).toBeTruthy();
-    expect(getByText("Pools")).toBeTruthy();
+  it("renders the bottom tab labels", async () => {
+    const { getAllByText } = renderApp();
+    await waitFor(() => {
+      // Tab labels are rendered by the real bottom-tab navigator.
+      expect(getAllByText("Prediction").length).toBeGreaterThan(0);
+      expect(getAllByText("Assets").length).toBeGreaterThan(0);
+      expect(getAllByText("Pools").length).toBeGreaterThan(0);
+    });
   });
 
-  it("has correct theme colors", () => {
-    const { getByText } = render(<App />);
-    const predictionTab = getByText("Prediction");
-    expect(predictionTab).toBeTruthy();
-    // Add more theme-related tests as needed
+  it("renders the initial Prediction screen", async () => {
+    const { getByText } = renderApp();
+    await waitFor(() => {
+      expect(getByText("InputScreen")).toBeTruthy();
+    });
   });
 });
