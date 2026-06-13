@@ -86,17 +86,19 @@ npm install -g eslint prettier solhint
 
 # Define directories to process
 PYTHON_DIRECTORIES=(
-  "backend"
-  "backend/api"
-  "backend/core"
-  "backend/services"
+  "code/backend"
+  "code/backend/api"
+  "code/backend/core"
+  "code/backend/services"
+  "code/ml_models"
 )
 
 JS_DIRECTORIES=(
-  "frontend/src"
-  "frontend/src/components"
-  "frontend/src/pages"
-  "frontend/src/lib"
+  "web-frontend/src"
+  "web-frontend/src/components"
+  "web-frontend/src/pages"
+  "web-frontend/src/lib"
+  "mobile-frontend/src"
 )
 
 SOLIDITY_DIRECTORIES=(
@@ -260,6 +262,10 @@ echo "Prettier formatting completed."
 # 3. Solidity Linting
 echo "----------------------------------------"
 echo "Running Solidity linting tools..."
+
+if [ "$SOLC_AVAILABLE" = false ]; then
+  echo "Note: solc not found - skipping compiler-based checks; running solhint/prettier only."
+fi
 
 # 3.1 Create solhint config if it doesn't exist
 if [ ! -f ".solhint.json" ]; then

@@ -49,7 +49,6 @@ Fluxion/
 ├── mobile-frontend/        # Mobile application
 ├── web-frontend/           # Web dashboard
 ├── scripts/                # Automation, setup, and utility scripts
-├── IMPROVEMENTS.md         # Detailed changelog of v2 improvements
 ├── LICENSE                 # License information
 └── README.md               # Project overview and instructions
 ```

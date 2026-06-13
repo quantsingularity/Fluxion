@@ -120,5 +120,5 @@ Each script uses configuration files that should be placed in specific directori
 
 - Deployment configs: `./infrastructure/deployment/configs/`
 - Test configs: `./infrastructure/test/configs/`
-- AI/ML configs: `./code/ai/configs/`
+- AI/ML configs: `./code/ml_models/configs/` (override base dir via `AI_DIR`)
 - Monitoring configs: `./infrastructure/monitoring/configs/`

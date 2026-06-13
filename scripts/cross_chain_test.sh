@@ -124,7 +124,11 @@ function setup_test_environment {
 
     # Install test dependencies
     echo -e "${BLUE}Installing test dependencies...${NC}"
-    pip install -r code/backend/requirements-test.txt
+    if [ -f code/backend/requirements-test.txt ]; then
+        pip install -r code/backend/requirements-test.txt
+    else
+        pip install -r code/backend/requirements.txt
+    fi
 
     # Install Ganache for local blockchain testing
     npm install -g ganache
@@ -144,6 +148,7 @@ function start_local_blockchains {
         echo -e "${BLUE}Starting local $network node...${NC}"
 
         # Load network-specific configuration
+        # shellcheck source=/dev/null
         source "$CONFIG_DIR/$network.env"
 
         # Start Ganache with network-specific parameters
@@ -173,6 +178,7 @@ function run_unit_tests {
         echo -e "${BLUE}Testing on $network...${NC}"
 
         # Load network-specific configuration
+        # shellcheck source=/dev/null
         source "$CONFIG_DIR/$network.env"
 
         # Run Foundry tests with network-specific parameters
@@ -202,6 +208,7 @@ function run_integration_tests {
         echo -e "${BLUE}Testing on $network...${NC}"
 
         # Load network-specific configuration
+        # shellcheck source=/dev/null
         source "$CONFIG_DIR/$network.env"
 
         # Run Foundry tests with network-specific parameters
@@ -236,12 +243,17 @@ function run_e2e_tests {
 
     # Run end-to-end tests
     echo -e "${BLUE}Running end-to-end tests...${NC}"
+    if [ ! -d code/e2e ]; then
+        echo -e "${YELLOW}Warning: code/e2e directory not found; skipping end-to-end tests.${NC}"
+        return 0
+    fi
     cd code/e2e
 
     for network in "${TEST_NETWORKS[@]}"; do
         echo -e "${BLUE}Testing on $network...${NC}"
 
         # Load network-specific configuration
+        # shellcheck source=/dev/null
         source "$CONFIG_DIR/$network.env"
 
         # Run end-to-end tests with network-specific parameters
@@ -280,7 +292,9 @@ function run_messaging_tests {
             echo -e "${BLUE}Testing messaging from $source_network to $target_network...${NC}"
 
             # Load network-specific configurations
+            # shellcheck source=/dev/null
             source "$CONFIG_DIR/$source_network.env"
+            # shellcheck source=/dev/null
             source "$CONFIG_DIR/$target_network.env"
 
             # Run cross-chain messaging tests
@@ -304,6 +318,7 @@ function run_liquidity_tests {
         echo -e "${BLUE}Testing on $network...${NC}"
 
         # Load network-specific configuration
+        # shellcheck source=/dev/null
         source "$CONFIG_DIR/$network.env"
 
         # Run liquidity pool tests with network-specific parameters
@@ -326,6 +341,7 @@ function run_settlement_tests {
         echo -e "${BLUE}Testing on $network...${NC}"
 
         # Load network-specific configuration
+        # shellcheck source=/dev/null
         source "$CONFIG_DIR/$network.env"
 
         # Run settlement tests with network-specific parameters

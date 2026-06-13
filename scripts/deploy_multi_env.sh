@@ -148,6 +148,7 @@ function deploy_backend {
     echo -e "${BLUE}Deploying backend to $ENVIRONMENT environment...${NC}"
 
     # Load environment variables
+    # shellcheck source=/dev/null
     source "$CONFIG_DIR/$ENVIRONMENT.env"
 
     # Build Docker image
@@ -163,7 +164,7 @@ function deploy_backend {
     # Apply Kubernetes configurations
     echo -e "${BLUE}Applying Kubernetes configurations...${NC}"
     cd ../../infrastructure/kubernetes
-    kubectl apply -f backend-$ENVIRONMENT.yaml
+    kubectl apply -f base/backend-deployment.yaml -f base/backend-service.yaml
 
     cd ../..
     echo -e "${GREEN}Backend deployment to $ENVIRONMENT completed successfully${NC}"
@@ -174,6 +175,7 @@ function deploy_frontend {
     echo -e "${BLUE}Deploying frontend to $ENVIRONMENT environment...${NC}"
 
     # Load environment variables
+    # shellcheck source=/dev/null
     source "$CONFIG_DIR/$ENVIRONMENT.env"
 
     # Build frontend
@@ -186,14 +188,14 @@ function deploy_frontend {
     echo -e "${BLUE}Deploying frontend to hosting service...${NC}"
     if [[ "$ENVIRONMENT" == "production" ]]; then
         # Production deployment (example using AWS S3)
-        aws s3 sync build/ "s3://$FRONTEND_BUCKET" --delete
+        aws s3 sync dist/ "s3://$FRONTEND_BUCKET" --delete
         aws cloudfront create-invalidation --distribution-id "$CLOUDFRONT_DISTRIBUTION" --paths "/*"
     elif [[ "$ENVIRONMENT" == "staging" ]]; then
         # Staging deployment
-        aws s3 sync build/ "s3://$FRONTEND_BUCKET-staging" --delete
+        aws s3 sync dist/ "s3://$FRONTEND_BUCKET-staging" --delete
     else
         # Development deployment
-        aws s3 sync build/ "s3://$FRONTEND_BUCKET-dev" --delete
+        aws s3 sync dist/ "s3://$FRONTEND_BUCKET-dev" --delete
     fi
 
     cd ..
@@ -205,6 +207,7 @@ function deploy_contracts {
     echo -e "${BLUE}Deploying smart contracts to selected networks...${NC}"
 
     # Load environment variables
+    # shellcheck source=/dev/null
     source "$CONFIG_DIR/$ENVIRONMENT.env"
 
     # For each network, deploy contracts

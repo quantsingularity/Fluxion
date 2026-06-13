@@ -17,7 +17,10 @@ NC='\033[0m' # No Color
 MODEL_TYPES=("liquidity_prediction" "price_forecasting" "volatility_modeling" "arbitrage_detection")
 DATA_SOURCE="production"
 OUTPUT_DIR="./models"
-CONFIG_DIR="./code/ai/configs"
+# Base directory for ML code. The repository keeps ML code under code/ml_models;
+# override with AI_DIR if your layout differs.
+AI_DIR="${AI_DIR:-./code/ml_models}"
+CONFIG_DIR="${AI_DIR}/configs"
 FORCE_RETRAIN=false
 DEPLOY_MODELS=false
 GPU_ENABLED=false
@@ -140,7 +143,7 @@ function setup_environment {
 
     # Install AI/ML dependencies
     echo -e "${BLUE}Installing AI/ML dependencies...${NC}"
-    pip install -r code/ai/requirements.txt
+    pip install -r ${AI_DIR}/requirements.txt
 
     # Install additional packages based on options
     if [[ "$GPU_ENABLED" == "true" ]]; then
@@ -169,7 +172,7 @@ function fetch_data {
     mkdir -p data
 
     # Run data fetching script with appropriate parameters
-    python3 code/ai/data/fetch_data.py \
+    python3 ${AI_DIR}/data/fetch_data.py \
         --source "$DATA_SOURCE" \
         --output-dir "data" \
         --models "${MODEL_TYPES[@]}"
@@ -224,7 +227,7 @@ function train_models {
         esac
 
         # Build training command
-        cmd="python3 code/ai/training/$script \
+        cmd="python3 ${AI_DIR}/training/$script \
             --config $CONFIG_DIR/$model_type.yaml \
             --data-dir data/$model_type \
             --output-dir $OUTPUT_DIR/$model_type"
@@ -269,7 +272,7 @@ function evaluate_models {
         mkdir -p "$OUTPUT_DIR/$model_type/evaluation"
 
         # Run evaluation script
-        python3 code/ai/evaluation/evaluate.py \
+        python3 ${AI_DIR}/evaluation/evaluate.py \
             --model-type "$model_type" \
             --model-path "$OUTPUT_DIR/$model_type/latest.pt" \
             --data-dir "data/$model_type" \
@@ -315,14 +318,14 @@ function deploy_models {
 
         # Convert model to ONNX format for deployment
         echo -e "${BLUE}Converting $model_type model to ONNX format...${NC}"
-        python3 code/ai/deployment/convert_to_onnx.py \
+        python3 ${AI_DIR}/deployment/convert_to_onnx.py \
             --model-type "$model_type" \
             --model-path "$OUTPUT_DIR/$model_type/latest.pt" \
             --output-path "$OUTPUT_DIR/$model_type/model.onnx"
 
         # Deploy model to serving infrastructure
         echo -e "${BLUE}Deploying $model_type model to serving infrastructure...${NC}"
-        python3 code/ai/deployment/deploy.py \
+        python3 ${AI_DIR}/deployment/deploy.py \
             --model-type "$model_type" \
             --model-path "$OUTPUT_DIR/$model_type/model.onnx" \
             --config "$CONFIG_DIR/deployment.yaml"
@@ -342,7 +345,7 @@ function generate_documentation {
 
     # Generate overall documentation
     echo -e "${BLUE}Generating overall model documentation...${NC}"
-    python3 code/ai/documentation/generate_docs.py \
+    python3 ${AI_DIR}/documentation/generate_docs.py \
         --models "${MODEL_TYPES[@]}" \
         --output-dir "$OUTPUT_DIR/documentation"
 
@@ -357,7 +360,7 @@ function generate_documentation {
         fi
 
         # Generate model-specific documentation
-        python3 code/ai/documentation/generate_model_card.py \
+        python3 ${AI_DIR}/documentation/generate_model_card.py \
             --model-type "$model_type" \
             --model-path "$OUTPUT_DIR/$model_type/latest.pt" \
             --evaluation-path "$OUTPUT_DIR/$model_type/evaluation" \

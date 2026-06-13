@@ -24,8 +24,8 @@ Production-ready DeFi supply chain backend with enterprise-grade security, compl
 ### 1. Clone & configure
 
 ```bash
-git clone <repo-url>
-cd fluxion
+git clone https://github.com/quantsingularity/Fluxion.git
+cd Fluxion/code
 cp backend/.env.example backend/.env
 # Edit backend/.env – at minimum change SECRET_KEY
 ```

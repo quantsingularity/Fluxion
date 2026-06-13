@@ -55,16 +55,14 @@ fi
 # --- Backend Setup (Python/Flask or FastAPI) ---
 echo ""
 echo "Setting up Fluxion Backend..."
-# The requirements.txt is in code/, and README mentions running backend from 'backend/' subdir
-# Tech stack in README says FastAPI, but requirements.txt has Flask.
-BACKEND_CODE_DIR="${PROJECT_DIR}/code" # Directory containing requirements.txt
-ACTUAL_BACKEND_RUN_DIR="${PROJECT_DIR}/code/backend" # Directory from where backend might be run as per README
+# FastAPI backend; dependencies and app live under code/backend.
+BACKEND_CODE_DIR="${PROJECT_DIR}/code/backend"
 
 if [ ! -d "${BACKEND_CODE_DIR}" ]; then
     echo "Error: Backend code directory ${BACKEND_CODE_DIR} not found. Skipping backend setup."
 else
     cd "${BACKEND_CODE_DIR}"
-    echo "Changed directory to $(pwd) for backend Python setup (location of requirements.txt)."
+    echo "Changed directory to $(pwd) for backend Python setup."
 
     if [ ! -f "requirements.txt" ]; then
         echo "Error: requirements.txt not found in ${BACKEND_CODE_DIR}. Cannot install backend dependencies."
@@ -73,19 +71,16 @@ else
         if ! python3.11 -m venv venv_fluxion_backend_py; then
             echo "Failed to create backend virtual environment. Please check your Python installation."
         else
+            # shellcheck source=/dev/null
             source venv_fluxion_backend_py/bin/activate
             echo "Backend Python virtual environment created and activated."
 
             echo "Installing backend Python dependencies from requirements.txt..."
             pip3 install -r requirements.txt
-            echo "Backend dependencies installed (Flask based on requirements.txt)."
+            echo "Backend dependencies installed."
 
             echo "To activate the backend virtual environment later, run: source ${BACKEND_CODE_DIR}/venv_fluxion_backend_py/bin/activate"
-            echo "README.md mentions running backend with 'uvicorn api:app --host 0.0.0.0 --port 8000' from a 'backend' subdirectory and using Celery."
-            echo "However, requirements.txt lists Flask. Please verify the correct framework and run command."
-            echo "If Flask: cd to actual backend app directory (e.g., ${ACTUAL_BACKEND_RUN_DIR} or ${PROJECT_DIR}/code/api if it exists) and use 'flask run' or 'gunicorn'."
-            echo "If FastAPI/Uvicorn (as per README tech stack): Ensure FastAPI is in requirements or install manually, then 'cd ${ACTUAL_BACKEND_RUN_DIR} && uvicorn api:app ...'"
-            echo "Celery worker: 'cd ${ACTUAL_BACKEND_RUN_DIR} && celery -A engine worker -l INFO --pool=gevent' (ensure 'engine' is the correct Celery app instance)."
+            echo "To run the backend (FastAPI): cd ${BACKEND_CODE_DIR} && uvicorn app.main:app --host 0.0.0.0 --port 5000"
             deactivate
             echo "Backend Python virtual environment deactivated."
         fi
@@ -110,9 +105,8 @@ else
         echo "Installing Web Frontend Node.js dependencies using npm..."
         if ! command -v npm &> /dev/null; then echo "npm command not found."; else npm install; fi
         echo "Web Frontend dependencies installed."
-        echo "To start the Web Frontend development server (from ${WEB_FRONTEND_DIR}): npm run dev (or vite, as per package.json)"
-        echo "To build the Web Frontend (from ${WEB_FRONTEND_DIR}): npm run build (or vite build, as per package.json)"
-        echo "README also mentions 'cd ../frontend && npm start' - ensure correct directory and command."
+        echo "To start the Web Frontend development server (from ${WEB_FRONTEND_DIR}): npm run dev"
+        echo "To build the Web Frontend (from ${WEB_FRONTEND_DIR}): npm run build"
     fi
     cd "${PROJECT_DIR}" # Return to the main project directory
 fi
