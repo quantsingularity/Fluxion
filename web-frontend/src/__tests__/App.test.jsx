@@ -89,8 +89,15 @@ const renderWithRouter = (ui, { route = "/" } = {}) => {
 };
 
 describe("App Component", () => {
-  it("renders Navbar and Sidebar", () => {
-    renderWithRouter(<App />);
+  it("renders the navbar on the homepage but not the sidebar", () => {
+    renderWithRouter(<App />, { route: "/" });
+    expect(screen.getByTestId("navbar")).toBeInTheDocument();
+    // The homepage is public and must not show the app sidebar.
+    expect(screen.queryByTestId("sidebar")).not.toBeInTheDocument();
+  });
+
+  it("renders the sidebar inside the authenticated app shell", () => {
+    renderWithRouter(<App />, { route: "/dashboard" });
     expect(screen.getByTestId("navbar")).toBeInTheDocument();
     expect(screen.getByTestId("sidebar")).toBeInTheDocument();
   });

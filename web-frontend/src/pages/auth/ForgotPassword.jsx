@@ -71,8 +71,14 @@ const ForgotPassword = () => {
             to="/signin"
             leftIcon={<FiArrowLeft />}
             variant="outline"
-            borderColor="gray.700"
-            _hover={{ borderColor: "brand.500", color: "brand.300" }}
+            color="white"
+            borderColor="whiteAlpha.400"
+            bg="whiteAlpha.50"
+            _hover={{
+              bg: "whiteAlpha.200",
+              borderColor: "brand.400",
+              color: "brand.200",
+            }}
           >
             Back to sign in
           </Button>

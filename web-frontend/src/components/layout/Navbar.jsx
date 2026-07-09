@@ -9,6 +9,7 @@ import {
   DrawerHeader,
   DrawerOverlay,
   Flex,
+  Heading,
   HStack,
   Icon,
   IconButton,
@@ -42,7 +43,7 @@ import {
   FiUser,
 } from "react-icons/fi";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
-import logo from "../../assets/images/fluxion-logo.svg";
+import logo from "../../assets/images/fluxion-mark.svg";
 import { useAuth } from "../../lib/auth-context.jsx";
 import { useWeb3 } from "../../lib/web3-config.jsx";
 
@@ -131,7 +132,12 @@ const Navbar = () => {
         {/* Logo */}
         <Flex flex={1} justify={{ base: "center", md: "start" }}>
           <RouterLink to="/">
-            <Image src={logo} alt="Fluxion Logo" h="8" />
+            <HStack spacing={2}>
+              <Image src={logo} alt="Fluxion" h="8" />
+              <Heading size="md" letterSpacing="tight" color="white">
+                Fluxion
+              </Heading>
+            </HStack>
           </RouterLink>
         </Flex>
 
@@ -259,8 +265,10 @@ const Navbar = () => {
                 as={RouterLink}
                 to="/signin"
                 size="sm"
-                variant="ghost"
-                _hover={{ bg: "gray.700" }}
+                variant="outline"
+                color="white"
+                borderColor="gray.600"
+                _hover={{ bg: "gray.700", borderColor: "gray.500" }}
                 display={{ base: "none", sm: "flex" }}
               >
                 Sign in
@@ -289,7 +297,12 @@ const Navbar = () => {
         <DrawerContent bg="gray.900" color="white">
           <DrawerCloseButton />
           <DrawerHeader borderBottomWidth="1px" borderColor="gray.700">
-            <Image src={logo} alt="Fluxion" h="7" />
+            <HStack spacing={2}>
+              <Image src={logo} alt="Fluxion" h="7" />
+              <Heading size="sm" color="white">
+                Fluxion
+              </Heading>
+            </HStack>
           </DrawerHeader>
           <DrawerBody py={4}>
             <VStack spacing={1} align="stretch">

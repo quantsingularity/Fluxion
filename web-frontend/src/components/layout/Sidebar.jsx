@@ -20,7 +20,7 @@ import {
   FiSettings,
 } from "react-icons/fi";
 import { NavLink, useLocation } from "react-router-dom";
-import logo from "../../assets/images/fluxion-logo.svg";
+import logo from "../../assets/images/fluxion-mark.svg";
 
 const NavItem = ({ icon, children, to }) => {
   const location = useLocation();
@@ -82,7 +82,7 @@ const Sidebar = () => {
     >
       {/* Logo */}
       <Flex h="14" alignItems="center" px="6" mb={4}>
-        <Image src={logo} alt="Fluxion Logo" h="8" mr={3} />
+        <Image src={logo} alt="Fluxion" h="8" mr={2} />
         <Text
           fontSize="lg"
           fontWeight="bold"

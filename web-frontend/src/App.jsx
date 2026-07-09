@@ -1,5 +1,6 @@
 import { Route, Routes } from "react-router-dom";
 import AppShell from "./components/layout/AppShell";
+import PublicLayout from "./components/layout/PublicLayout";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import Analytics from "./pages/analytics/Analytics";
 import ForgotPassword from "./pages/auth/ForgotPassword";
@@ -26,12 +27,14 @@ function App() {
       <Route path="/signup" element={<SignUp />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
 
-      {/* Everything else lives inside the application shell */}
-      <Route element={<AppShell />}>
+      {/* Public pages without the app sidebar */}
+      <Route element={<PublicLayout />}>
         {/* Homepage is the public entry point */}
         <Route path="/" element={<Home />} />
+      </Route>
 
-        {/* Authenticated application area */}
+      {/* Authenticated application area (with sidebar) */}
+      <Route element={<AppShell />}>
         <Route
           path="/dashboard"
           element={
@@ -96,8 +99,10 @@ function App() {
             </Protected>
           }
         />
+      </Route>
 
-        {/* 404 within the shell */}
+      {/* 404 (public, no sidebar) */}
+      <Route element={<PublicLayout />}>
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>

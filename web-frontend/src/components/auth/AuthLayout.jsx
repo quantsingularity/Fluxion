@@ -10,7 +10,7 @@ import {
 } from "@chakra-ui/react";
 import { FiBarChart2, FiShield, FiZap } from "react-icons/fi";
 import { Link as RouterLink } from "react-router-dom";
-import logo from "../../assets/images/fluxion-logo.svg";
+import logo from "../../assets/images/fluxion-mark.svg";
 
 const highlights = [
   {
