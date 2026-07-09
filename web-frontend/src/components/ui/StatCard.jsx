@@ -39,7 +39,7 @@ const StatCard = ({ title, value, icon, helpText, type, isLoading }) => {
             )}
           </Flex>
           <Text fontSize="2xl" fontWeight="bold" color="white" mt={1}>
-            {isLoading ? "—" : value}
+            {isLoading ? "-" : value}
           </Text>
           {type && (
             <Text

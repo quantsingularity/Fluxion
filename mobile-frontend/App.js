@@ -1,127 +1,156 @@
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { NavigationContainer } from "@react-navigation/native";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import {
-  DefaultTheme,
-  Provider as PaperProvider,
-  useTheme,
-} from "react-native-paper";
-import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-import AssetsScreen from "./src/screens/AssetsScreen";
-// Import Screens
-import InputScreen from "./src/screens/InputScreen";
+  DarkTheme,
+  NavigationContainer,
+  createNavigationContainerRef,
+} from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import Feather from "@expo/vector-icons/Feather";
+import { useEffect } from "react";
+import { ActivityIndicator, View } from "react-native";
+import { PaperProvider } from "react-native-paper";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import { StatusBar } from "expo-status-bar";
+import { AuthProvider, useAuth } from "./src/context/AuthContext";
+import AnalyticsScreen from "./src/screens/AnalyticsScreen";
+import CreatePoolScreen from "./src/screens/CreatePoolScreen";
+import DashboardScreen from "./src/screens/DashboardScreen";
+import ForgotPasswordScreen from "./src/screens/ForgotPasswordScreen";
+import HomeScreen from "./src/screens/HomeScreen";
 import PoolsScreen from "./src/screens/PoolsScreen";
-import ResultsScreen from "./src/screens/ResultsScreen";
+import PortfolioScreen from "./src/screens/PortfolioScreen";
+import SettingsScreen from "./src/screens/SettingsScreen";
+import SignInScreen from "./src/screens/SignInScreen";
+import SignUpScreen from "./src/screens/SignUpScreen";
+import SyntheticsScreen from "./src/screens/SyntheticsScreen";
+import { colors, paperTheme } from "./src/theme/theme";
 
-const Stack = createNativeStackNavigator();
+const RootStack = createNativeStackNavigator();
+const MainStack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
-// Define a custom theme
-const theme = {
-  ...DefaultTheme,
+export const navigationRef = createNavigationContainerRef();
+
+// Fluxion-branded dark navigation theme.
+const navTheme = {
+  ...DarkTheme,
   colors: {
-    ...DefaultTheme.colors,
-    primary: "#6200ee",
-    accent: "#03dac4",
-    background: "#f6f6f6",
-    secondaryContainer: "#e0d6ff", // Example for active tab background
-    onSecondaryContainer: "#21005d", // Example for active tab icon/label
-    onSurfaceVariant: "#49454f", // Example for inactive tab icon/label
+    ...DarkTheme.colors,
+    primary: colors.brand[500],
+    background: colors.background,
+    card: colors.surface,
+    text: colors.text,
+    border: colors.border,
+    notification: colors.accent[500],
   },
 };
 
-// Stack Navigator for the Prediction Flow
-function PredictionStack() {
-  const { colors } = useTheme(); // Use theme from PaperProvider
-  return (
-    <Stack.Navigator
-      initialRouteName="Input"
-      screenOptions={{
-        headerStyle: {
-          backgroundColor: colors.primary,
-        },
-        headerTintColor: "#fff",
-        headerTitleStyle: {
-          fontWeight: "bold",
-        },
-      }}
-    >
-      <Stack.Screen
-        name="Input"
-        component={InputScreen}
-        options={{ title: "Energy Prediction Input" }}
-      />
-      <Stack.Screen
-        name="Results"
-        component={ResultsScreen}
-        options={{ title: "Prediction Results" }}
-      />
-    </Stack.Navigator>
-  );
-}
+const tabIcons = {
+  Dashboard: "grid",
+  Pools: "droplet",
+  Synthetics: "dollar-sign",
+  Portfolio: "pie-chart",
+  Settings: "settings",
+};
 
-// Main App component with Bottom Tab Navigator
+const MainTabs = () => (
+  <Tab.Navigator
+    screenOptions={({ route }) => ({
+      headerShown: false,
+      tabBarActiveTintColor: colors.brand[400],
+      tabBarInactiveTintColor: colors.textMuted,
+      tabBarStyle: {
+        backgroundColor: colors.surface,
+        borderTopColor: colors.border,
+        height: 62,
+        paddingBottom: 8,
+        paddingTop: 6,
+      },
+      tabBarLabelStyle: { fontSize: 11, fontWeight: "600" },
+      tabBarIcon: ({ color, size }) => (
+        <Feather name={tabIcons[route.name]} size={size - 2} color={color} />
+      ),
+    })}
+  >
+    <Tab.Screen name="Dashboard" component={DashboardScreen} />
+    <Tab.Screen name="Pools" component={PoolsScreen} />
+    <Tab.Screen name="Synthetics" component={SyntheticsScreen} />
+    <Tab.Screen name="Portfolio" component={PortfolioScreen} />
+    <Tab.Screen name="Settings" component={SettingsScreen} />
+  </Tab.Navigator>
+);
+
+// The authenticated area: tabs plus screens presented above them.
+const MainNavigator = () => (
+  <MainStack.Navigator screenOptions={{ headerShown: false }}>
+    <MainStack.Screen name="Tabs" component={MainTabs} />
+    <MainStack.Screen name="Analytics" component={AnalyticsScreen} />
+    <MainStack.Screen
+      name="CreatePool"
+      component={CreatePoolScreen}
+      options={{ presentation: "modal" }}
+    />
+  </MainStack.Navigator>
+);
+
+const RootNavigator = () => {
+  const { isAuthenticated, initializing } = useAuth();
+
+  // When the user signs out anywhere in the app, return them to the homepage.
+  useEffect(() => {
+    if (!initializing && !isAuthenticated && navigationRef.isReady()) {
+      const route = navigationRef.getCurrentRoute();
+      if (route && route.name !== "Home") {
+        navigationRef.reset({ index: 0, routes: [{ name: "Home" }] });
+      }
+    }
+  }, [isAuthenticated, initializing]);
+
+  if (initializing) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: colors.background,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <ActivityIndicator size="large" color={colors.brand[400]} />
+      </View>
+    );
+  }
+
+  // Home is always the entry point; users move to the authenticated stack from
+  // there via sign in / sign up.
+  return (
+    <RootStack.Navigator
+      initialRouteName="Home"
+      screenOptions={{ headerShown: false, animation: "slide_from_right" }}
+    >
+      <RootStack.Screen name="Home" component={HomeScreen} />
+      <RootStack.Screen name="SignIn" component={SignInScreen} />
+      <RootStack.Screen name="SignUp" component={SignUpScreen} />
+      <RootStack.Screen
+        name="ForgotPassword"
+        component={ForgotPasswordScreen}
+      />
+      <RootStack.Screen name="Main" component={MainNavigator} />
+    </RootStack.Navigator>
+  );
+};
+
 export default function App() {
   return (
-    <PaperProvider theme={theme}>
-      <NavigationContainer>
-        <Tab.Navigator
-          screenOptions={({ route }) => ({
-            headerShown: false, // Hide header for tabs, PredictionStack has its own
-            tabBarIcon: ({ focused, color, size }) => {
-              let iconName;
-              if (route.name === "Predict") {
-                iconName = focused ? "chart-line" : "chart-line-variant";
-              } else if (route.name === "Assets") {
-                iconName = focused ? "bitcoin" : "bitcoin"; // Using bitcoin icon for assets
-              } else if (route.name === "Pools") {
-                iconName = focused ? "waves" : "waves-arrow-up"; // Using waves icon for pools
-              }
-              // You can return any component that you like here!
-              return (
-                <MaterialCommunityIcons
-                  name={iconName}
-                  size={size}
-                  color={color}
-                />
-              );
-            },
-            tabBarActiveTintColor: theme.colors.primary,
-            tabBarInactiveTintColor: theme.colors.onSurfaceVariant,
-            // Optional: Style the tab bar itself
-            // tabBarActiveBackgroundColor: theme.colors.secondaryContainer,
-            // tabBarStyle: { backgroundColor: theme.colors.surfaceVariant },
-          })}
-        >
-          <Tab.Screen
-            name="Predict"
-            component={PredictionStack}
-            options={{ title: "Prediction" }}
-          />
-          <Tab.Screen
-            name="Assets"
-            component={AssetsScreen}
-            options={{
-              title: "Assets",
-              headerShown: true, // Show header for simple screens if needed
-              headerStyle: { backgroundColor: theme.colors.primary },
-              headerTintColor: "#fff",
-              headerTitleStyle: { fontWeight: "bold" },
-            }}
-          />
-          <Tab.Screen
-            name="Pools"
-            component={PoolsScreen}
-            options={{
-              title: "Pools",
-              headerShown: true, // Show header for simple screens if needed
-              headerStyle: { backgroundColor: theme.colors.primary },
-              headerTintColor: "#fff",
-              headerTitleStyle: { fontWeight: "bold" },
-            }}
-          />
-        </Tab.Navigator>
-      </NavigationContainer>
-    </PaperProvider>
+    <SafeAreaProvider>
+      <PaperProvider theme={paperTheme}>
+        <AuthProvider>
+          <NavigationContainer ref={navigationRef} theme={navTheme}>
+            <StatusBar style="light" />
+            <RootNavigator />
+          </NavigationContainer>
+        </AuthProvider>
+      </PaperProvider>
+    </SafeAreaProvider>
   );
 }

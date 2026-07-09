@@ -9,6 +9,21 @@ jest.mock("../lib/web3-config.jsx", () => ({
   useWeb3: () => ({ isConnected: false, pools: [], account: null }),
 }));
 
+// Mock the auth context so protected routes render as an authenticated user.
+jest.mock("../lib/auth-context.jsx", () => ({
+  useAuth: () => ({
+    user: { email: "test@fluxion.finance", first_name: "Test" },
+    isAuthenticated: true,
+    isInitializing: false,
+    isSubmitting: false,
+    signIn: jest.fn(),
+    signUp: jest.fn(),
+    signOut: jest.fn(),
+    updateUser: jest.fn(),
+  }),
+  AuthProvider: ({ children }) => children,
+}));
+
 // Mock the components
 jest.mock("../components/layout/Navbar", () => {
   return function MockNavbar() {

@@ -74,3 +74,23 @@ global.console = {
   warn: jest.fn(),
   log: jest.fn(),
 };
+
+// Mock expo-linear-gradient with a plain View so components using it render.
+jest.mock("expo-linear-gradient", () => {
+  const React = require("react");
+  const { View } = require("react-native");
+  return {
+    __esModule: true,
+    LinearGradient: (props) => React.createElement(View, props, props.children),
+  };
+});
+
+// Mock @expo/vector-icons Feather set with a simple Text stand-in.
+jest.mock("@expo/vector-icons/Feather", () => {
+  const React = require("react");
+  const { Text } = require("react-native");
+  return {
+    __esModule: true,
+    default: ({ name }) => React.createElement(Text, null, name),
+  };
+});

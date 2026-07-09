@@ -34,7 +34,9 @@ const apiClient = axios.create({
 
 // Token storage keys
 const AUTH_TOKEN_KEY = "@fluxion_auth_token";
+const REFRESH_TOKEN_KEY = "@fluxion_refresh_token";
 const TOKEN_EXPIRY_KEY = "@fluxion_token_expiry";
+const USER_KEY = "@fluxion_user";
 
 // Token management functions
 export const setAuthToken = async (token, expiryMinutes = 30) => {
@@ -71,10 +73,58 @@ export const getAuthToken = async () => {
 
 export const clearAuthToken = async () => {
   try {
-    await AsyncStorage.multiRemove([AUTH_TOKEN_KEY, TOKEN_EXPIRY_KEY]);
+    await AsyncStorage.multiRemove([
+      AUTH_TOKEN_KEY,
+      REFRESH_TOKEN_KEY,
+      TOKEN_EXPIRY_KEY,
+      USER_KEY,
+    ]);
   } catch (error) {
     console.error("Error clearing auth token:", error);
   }
+};
+
+// Persist the full token pair returned by the backend auth endpoints.
+export const setAuthTokens = async ({
+  accessToken,
+  refreshToken,
+  expiresIn = 1800,
+}) => {
+  try {
+    if (accessToken) await AsyncStorage.setItem(AUTH_TOKEN_KEY, accessToken);
+    if (refreshToken)
+      await AsyncStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+    const expiryTime = Date.now() + expiresIn * 1000;
+    await AsyncStorage.setItem(TOKEN_EXPIRY_KEY, expiryTime.toString());
+  } catch (error) {
+    console.error("Error saving auth tokens:", error);
+  }
+};
+
+export const getRefreshToken = () => AsyncStorage.getItem(REFRESH_TOKEN_KEY);
+
+// Cache the authenticated user so the session can be restored instantly on
+// cold start without a network round-trip.
+export const setStoredUser = async (user) => {
+  try {
+    if (user) await AsyncStorage.setItem(USER_KEY, JSON.stringify(user));
+  } catch (error) {
+    console.error("Error saving user:", error);
+  }
+};
+
+export const getStoredUser = async () => {
+  try {
+    const raw = await AsyncStorage.getItem(USER_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+
+export const isAuthenticated = async () => {
+  const token = await getAuthToken();
+  return !!token;
 };
 
 // Request interceptor for adding auth token
@@ -131,34 +181,6 @@ const unwrap = (payload) => {
     return payload.data;
   }
   return payload;
-};
-
-/**
- * Predict energy consumption
- * @param {Array<string>} timestamps - ISO 8601 formatted timestamps
- * @param {Array<string>} meterIds - Meter IDs
- * @param {Object} contextFeatures - Context features object
- * @returns {Promise<Object>} Prediction results
- */
-export const predictEnergy = async (timestamps, meterIds, contextFeatures) => {
-  try {
-    const response = await retryRequest(() =>
-      apiClient.post("/predict", {
-        timestamps,
-        meter_ids: meterIds,
-        context_features: contextFeatures,
-      }),
-    );
-    return response.data;
-  } catch (error) {
-    console.error(
-      "API Error (predictEnergy):",
-      error.response?.data || error.message,
-    );
-    throw new Error(
-      error.response?.data?.detail || "Failed to fetch prediction",
-    );
-  }
 };
 
 /**
@@ -370,6 +392,76 @@ export const getHealthStatus = async () => {
     );
     throw new Error("API health check failed");
   }
+};
+
+// --- Email / password authentication -------------------------------------
+
+const extractTokens = (payload) => {
+  const d = payload?.data ?? payload ?? {};
+  return {
+    accessToken: d.access_token || d.accessToken,
+    refreshToken: d.refresh_token || d.refreshToken,
+    expiresIn: d.expires_in || d.expiresIn || 1800,
+  };
+};
+
+/**
+ * Register a new account with email + password.
+ * @param {Object} payload - { email, password, first_name, last_name, ... }
+ */
+export const registerUser = async (payload) => {
+  const body = {
+    user_type: "individual",
+    confirm_password: payload.confirm_password ?? payload.password,
+    terms_accepted: payload.terms_accepted ?? true,
+    privacy_accepted: payload.privacy_accepted ?? true,
+    ...payload,
+  };
+  const response = await apiClient.post("/auth/register", body);
+  const tokens = extractTokens(response.data);
+  if (tokens.accessToken) await setAuthTokens(tokens);
+  return response.data?.data ?? response.data;
+};
+
+/**
+ * Sign in with email + password.
+ * @param {string} email
+ * @param {string} password
+ */
+export const loginUser = async (email, password) => {
+  const response = await apiClient.post("/auth/login", { email, password });
+  const tokens = extractTokens(response.data);
+  if (tokens.accessToken) await setAuthTokens(tokens);
+  return response.data?.data ?? response.data;
+};
+
+/**
+ * Fetch the currently authenticated user.
+ */
+export const getCurrentUser = async () => {
+  const response = await apiClient.get("/auth/me");
+  return response.data?.data ?? response.data;
+};
+
+/**
+ * Sign out: notify the backend (best effort) then clear local tokens.
+ */
+export const logoutUser = async () => {
+  try {
+    await apiClient.post("/auth/logout");
+  } catch {
+    // Ignore network/auth errors on logout; tokens are cleared regardless.
+  }
+  await clearAuthToken();
+};
+
+/**
+ * Request a password reset email.
+ * @param {string} email
+ */
+export const requestPasswordReset = async (email) => {
+  const response = await apiClient.post("/auth/password-reset", { email });
+  return response.data;
 };
 
 export default apiClient;

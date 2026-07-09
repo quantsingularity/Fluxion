@@ -3,6 +3,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter as Router } from "react-router-dom";
 import App from "./App";
+import { AuthProvider } from "./lib/auth-context.jsx";
 import { DataProvider } from "./lib/data-context";
 import { UIProvider } from "./lib/ui-context";
 import { Web3Provider } from "./lib/web3-config.jsx";
@@ -97,7 +98,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <DataProvider>
           <Web3Provider>
             <Router>
-              <App />
+              <AuthProvider>
+                <App />
+              </AuthProvider>
             </Router>
           </Web3Provider>
         </DataProvider>

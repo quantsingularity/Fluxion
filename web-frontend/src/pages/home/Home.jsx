@@ -37,6 +37,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { useAuth } from "../../lib/auth-context.jsx";
 import { useWeb3 } from "../../lib/web3-config.jsx";
 
 const tvlHistory = [
@@ -102,6 +103,7 @@ const features = [
 
 const Home = () => {
   const { isConnected, connectWallet } = useWeb3();
+  const { isAuthenticated } = useAuth();
   const cardBg = useColorModeValue("gray.800", "gray.700");
   const borderColor = useColorModeValue("gray.700", "gray.600");
   const subTextColor = "gray.400";
@@ -187,12 +189,12 @@ const Home = () => {
               lineHeight="1.8"
             >
               Provide liquidity with custom-weighted pools, mint synthetic
-              assets, and earn competitive yields — all in one non-custodial
+              assets, and earn competitive yields, all in one non-custodial
               platform secured by Ethereum.
             </Text>
 
             <HStack spacing={4} flexWrap="wrap">
-              <RouterLink to="/pools">
+              <RouterLink to={isAuthenticated ? "/dashboard" : "/signup"}>
                 <Button
                   size="lg"
                   colorScheme="brand"
@@ -205,26 +207,45 @@ const Home = () => {
                   rightIcon={<FiArrowRight />}
                   transition="all 0.2s"
                 >
-                  Explore Pools
+                  {isAuthenticated ? "Go to Dashboard" : "Get Started"}
                 </Button>
               </RouterLink>
 
-              {!isConnected && (
-                <Button
-                  size="lg"
-                  variant="outline"
-                  borderColor="brand.500"
-                  color="brand.300"
-                  _hover={{
-                    bg: "brand.500",
-                    color: "white",
-                    transform: "translateY(-2px)",
-                  }}
-                  onClick={connectWallet}
-                  transition="all 0.2s"
-                >
-                  Connect Wallet
-                </Button>
+              {!isAuthenticated ? (
+                <RouterLink to="/signin">
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    borderColor="brand.500"
+                    color="brand.300"
+                    _hover={{
+                      bg: "brand.500",
+                      color: "white",
+                      transform: "translateY(-2px)",
+                    }}
+                    transition="all 0.2s"
+                  >
+                    Sign in
+                  </Button>
+                </RouterLink>
+              ) : (
+                !isConnected && (
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    borderColor="brand.500"
+                    color="brand.300"
+                    _hover={{
+                      bg: "brand.500",
+                      color: "white",
+                      transform: "translateY(-2px)",
+                    }}
+                    onClick={connectWallet}
+                    transition="all 0.2s"
+                  >
+                    Connect Wallet
+                  </Button>
+                )
               )}
             </HStack>
           </Box>
@@ -534,7 +555,7 @@ const Home = () => {
           the Fluxion protocol. No minimums, no lock-ups.
         </Text>
         <HStack spacing={4} justify="center" flexWrap="wrap">
-          <RouterLink to="/pools/create">
+          <RouterLink to={isAuthenticated ? "/pools/create" : "/signup"}>
             <Button
               size="lg"
               colorScheme="brand"
@@ -546,10 +567,10 @@ const Home = () => {
               }}
               transition="all 0.2s"
             >
-              Create a Pool
+              {isAuthenticated ? "Create a Pool" : "Create Free Account"}
             </Button>
           </RouterLink>
-          <RouterLink to="/analytics">
+          <RouterLink to={isAuthenticated ? "/analytics" : "/signin"}>
             <Button
               size="lg"
               variant="outline"
@@ -557,7 +578,7 @@ const Home = () => {
               _hover={{ borderColor: "brand.500", color: "brand.300" }}
               transition="all 0.2s"
             >
-              View Analytics
+              {isAuthenticated ? "View Analytics" : "Sign in"}
             </Button>
           </RouterLink>
         </HStack>

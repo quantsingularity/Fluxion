@@ -1,589 +1,329 @@
-import { useCallback, useEffect, useState } from "react";
+import Feather from "@expo/vector-icons/Feather";
+import { useEffect, useMemo, useState } from "react";
 import {
-  FlatList,
+  Pressable,
   RefreshControl,
+  ScrollView,
   StyleSheet,
-  TouchableOpacity,
+  Text,
+  TextInput,
   View,
 } from "react-native";
-import {
-  ActivityIndicator,
-  Card,
-  Chip,
-  IconButton,
-  Paragraph,
-  ProgressBar,
-  Searchbar,
-  Snackbar,
-  Text,
-  Title,
-  useTheme,
-} from "react-native-paper";
 import { fetchPools } from "../api/client";
-import { formatCurrency } from "../utils/formatters";
+import AppCard from "../components/ui/AppCard";
+import GradientButton from "../components/ui/GradientButton";
+import { TokenPair } from "../components/ui/Logo";
+import Pill from "../components/ui/Pill";
+import Screen from "../components/ui/Screen";
+import { featuredPools } from "../data/mockData";
+import { colors, radius, spacing } from "../theme/theme";
 
-const PoolsScreen = ({ navigation: _navigation }) => {
-  const theme = useTheme();
-  const [pools, setPools] = useState([]);
-  const [loading, setLoading] = useState(true);
+const filters = ["All", "Weighted", "Stable", "Low Risk"];
+
+// Normalise a backend pool record into the shape the card expects, tolerating
+// missing fields so live and demo data render identically.
+const normalizePool = (pool, index) => ({
+  id: pool.id || pool.address || `pool-${index}`,
+  name:
+    pool.name || (pool.assets ? pool.assets.join("-") : `Pool ${index + 1}`),
+  assets: pool.assets || pool.tokens || ["TKN", "TKN"],
+  apy: pool.apy ? `${Number(pool.apy).toFixed(1)}%` : "-",
+  tvl: pool.tvl || pool.total_value_locked || "-",
+  volume24h: pool.volume24h || pool.volume_24h || "-",
+  fee: pool.fee || pool.swap_fee || "0.30%",
+  type: pool.type || "Weighted",
+  risk: pool.risk || "Medium",
+  utilization: pool.utilization ?? 60,
+});
+
+const riskTone = { Low: "success", Medium: "warning", High: "danger" };
+
+const PoolsScreen = ({ navigation }) => {
+  const [pools, setPools] = useState(featuredPools);
+  const [search, setSearch] = useState("");
+  const [activeFilter, setActiveFilter] = useState("All");
   const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState("tvl"); // tvl, apr, volume
 
-  // Load pools from API
-  const loadPools = useCallback(async (silent = false) => {
-    if (!silent) setLoading(true);
-    setError(null);
-
+  const load = async () => {
     try {
-      const data = await fetchPools({
-        limit: 100,
-        offset: 0,
-      });
-
-      // Handle both array response and paginated response
-      const poolsArray = Array.isArray(data)
-        ? data
-        : data.items || data.pools || [];
-      setPools(poolsArray);
-    } catch (err) {
-      console.error("Error loading pools:", err);
-      setError(err.message || "Failed to load pools");
-
-      // Use mock data in development mode as fallback
-      if (__DEV__) {
-        console.log("Using mock data as fallback");
-        setPools(getMockPools());
+      const data = await fetchPools();
+      if (Array.isArray(data) && data.length) {
+        setPools(data.map(normalizePool));
       }
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
+    } catch {
+      setPools(featuredPools);
     }
+  };
+
+  useEffect(() => {
+    load();
   }, []);
 
-  // Load pools on mount and auto-refresh every 30 seconds.
-  // loadPools is memoized (useCallback with []), so this effect runs once on
-  // mount instead of on every render (which previously stacked a new interval
-  // each render).
-  useEffect(() => {
-    loadPools();
-
-    const interval = setInterval(() => {
-      loadPools(true); // Silent refresh
-    }, 30000);
-
-    return () => clearInterval(interval);
-  }, [loadPools]);
-
-  // Pull to refresh handler
-  const onRefresh = useCallback(() => {
+  const onRefresh = async () => {
     setRefreshing(true);
-    loadPools();
-  }, [loadPools]);
-
-  // Search handler
-  const onChangeSearch = (query) => {
-    setSearchQuery(query);
+    await load();
+    setRefreshing(false);
   };
 
-  // Filter and sort pools
-  const getFilteredAndSortedPools = () => {
-    // Filter by search
-    const filtered = pools.filter((pool) => {
-      if (!searchQuery) return true;
-
-      const searchLower = searchQuery.toLowerCase();
-      return (
-        pool.name?.toLowerCase().includes(searchLower) ||
-        pool.pair?.toLowerCase().includes(searchLower) ||
-        pool.id?.toLowerCase().includes(searchLower) ||
-        pool.token0?.toLowerCase().includes(searchLower) ||
-        pool.token1?.toLowerCase().includes(searchLower)
-      );
+  const filtered = useMemo(() => {
+    return pools.filter((pool) => {
+      const matchesSearch =
+        !search || pool.name.toLowerCase().includes(search.toLowerCase());
+      const matchesFilter =
+        activeFilter === "All" ||
+        (activeFilter === "Low Risk"
+          ? pool.risk === "Low"
+          : pool.type === activeFilter);
+      return matchesSearch && matchesFilter;
     });
-
-    // Sort
-    filtered.sort((a, b) => {
-      switch (sortBy) {
-        case "tvl":
-          return (
-            (b.tvl || b.total_value_locked || 0) -
-            (a.tvl || a.total_value_locked || 0)
-          );
-        case "apr":
-          return (
-            (b.apr || b.estimated_apr || 0) - (a.apr || a.estimated_apr || 0)
-          );
-        case "volume":
-          return (
-            (b.volume_24h || b.volume || 0) - (a.volume_24h || a.volume || 0)
-          );
-        default:
-          return 0;
-      }
-    });
-
-    return filtered;
-  };
-
-  const filteredPools = getFilteredAndSortedPools();
-
-  // Render individual pool card
-  const renderPoolCard = ({ item }) => {
-    const apr = item.apr || item.estimated_apr || 0;
-    const tvl = item.tvl || item.total_value_locked || 0;
-    const volume = item.volume_24h || item.volume || 0;
-    const fees = item.fees_24h || item.fees || 0;
-    const utilization = item.utilization || 0;
-    const poolName = item.name || item.pair || `${item.token0}/${item.token1}`;
-
-    return (
-      <TouchableOpacity onPress={() => handlePoolPress(item)}>
-        <Card style={styles.card}>
-          <Card.Content>
-            <View style={styles.poolHeader}>
-              <View style={styles.poolInfo}>
-                <Title style={styles.poolName}>{poolName}</Title>
-                {item.protocol && (
-                  <Paragraph style={styles.poolProtocol}>
-                    {item.protocol}
-                  </Paragraph>
-                )}
-              </View>
-              <View style={styles.aprContainer}>
-                <Text
-                  style={[styles.aprValue, { color: theme.colors.primary }]}
-                >
-                  {apr.toFixed(2)}%
-                </Text>
-                <Text style={styles.aprLabel}>APR</Text>
-              </View>
-            </View>
-
-            <View style={styles.statsGrid}>
-              <View style={styles.statItem}>
-                <Text style={styles.statLabel}>TVL</Text>
-                <Text style={styles.statValue}>{formatCurrency(tvl)}</Text>
-              </View>
-              <View style={styles.statItem}>
-                <Text style={styles.statLabel}>24h Volume</Text>
-                <Text style={styles.statValue}>{formatCurrency(volume)}</Text>
-              </View>
-              <View style={styles.statItem}>
-                <Text style={styles.statLabel}>24h Fees</Text>
-                <Text style={styles.statValue}>{formatCurrency(fees)}</Text>
-              </View>
-            </View>
-
-            {utilization > 0 && (
-              <View style={styles.utilizationContainer}>
-                <View style={styles.utilizationHeader}>
-                  <Text style={styles.utilizationLabel}>Utilization</Text>
-                  <Text style={styles.utilizationValue}>
-                    {(utilization * 100).toFixed(1)}%
-                  </Text>
-                </View>
-                <ProgressBar
-                  progress={utilization}
-                  color={theme.colors.primary}
-                  style={styles.progressBar}
-                />
-              </View>
-            )}
-
-            <View style={styles.tagsContainer}>
-              {item.stable && (
-                <Chip
-                  mode="outlined"
-                  style={styles.tagChip}
-                  textStyle={styles.tagChipText}
-                >
-                  Stable
-                </Chip>
-              )}
-              {item.verified && (
-                <Chip
-                  icon="check-circle"
-                  mode="outlined"
-                  style={[
-                    styles.tagChip,
-                    { borderColor: theme.colors.primary },
-                  ]}
-                  textStyle={[
-                    styles.tagChipText,
-                    { color: theme.colors.primary },
-                  ]}
-                >
-                  Verified
-                </Chip>
-              )}
-              {item.incentivized && (
-                <Chip
-                  icon="gift"
-                  mode="outlined"
-                  style={styles.tagChip}
-                  textStyle={styles.tagChipText}
-                >
-                  Rewards
-                </Chip>
-              )}
-            </View>
-          </Card.Content>
-        </Card>
-      </TouchableOpacity>
-    );
-  };
-
-  // Handle pool press (navigate to detail screen if implemented)
-  const handlePoolPress = (pool) => {
-    // For now, just log the pool
-    console.log("Pool pressed:", pool);
-    // In a full implementation, you would navigate to a pool detail screen:
-    // navigation.navigate('PoolDetail', { poolId: pool.id });
-  };
-
-  // Render empty state
-  const renderEmptyState = () => (
-    <View style={styles.emptyState}>
-      <IconButton icon="waves" size={64} iconColor={theme.colors.outline} />
-      <Text
-        style={[styles.emptyText, { color: theme.colors.onSurfaceVariant }]}
-      >
-        {searchQuery
-          ? "No pools found matching your search"
-          : "No pools available"}
-      </Text>
-      <Text
-        style={[styles.emptySubtext, { color: theme.colors.onSurfaceVariant }]}
-      >
-        {error ? "There was an error loading pools" : "Pull down to refresh"}
-      </Text>
-    </View>
-  );
-
-  // Render loading state
-  if (loading && !refreshing) {
-    return (
-      <View
-        style={[
-          styles.centerContainer,
-          { backgroundColor: theme.colors.background },
-        ]}
-      >
-        <ActivityIndicator size="large" color={theme.colors.primary} />
-        <Text
-          style={[styles.loadingText, { color: theme.colors.onSurfaceVariant }]}
-        >
-          Loading pools...
-        </Text>
-      </View>
-    );
-  }
+  }, [pools, search, activeFilter]);
 
   return (
-    <View
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    <Screen
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor={colors.brand[400]}
+        />
+      }
     >
-      {/* Search Bar */}
-      <Searchbar
-        placeholder="Search pools..."
-        onChangeText={onChangeSearch}
-        value={searchQuery}
-        style={styles.searchBar}
-        elevation={0}
-      />
-
-      {/* Sort Chips */}
-      <View style={styles.sortContainer}>
-        <Text style={styles.sortLabel}>Sort by:</Text>
-        <Chip
-          testID="sort-chip-tvl"
-          selected={sortBy === "tvl"}
-          onPress={() => setSortBy("tvl")}
-          style={styles.sortChip}
-          mode={sortBy === "tvl" ? "flat" : "outlined"}
+      <View style={styles.header}>
+        <View style={styles.flex}>
+          <Text style={styles.title}>Liquidity Pools</Text>
+          <Text style={styles.subtitle}>
+            Provide liquidity and earn trading fees.
+          </Text>
+        </View>
+        <Pressable
+          style={styles.createBtn}
+          onPress={() => navigation.navigate("CreatePool")}
         >
-          TVL
-        </Chip>
-        <Chip
-          testID="sort-chip-apr"
-          selected={sortBy === "apr"}
-          onPress={() => setSortBy("apr")}
-          style={styles.sortChip}
-          mode={sortBy === "apr" ? "flat" : "outlined"}
-        >
-          APR
-        </Chip>
-        <Chip
-          testID="sort-chip-volume"
-          selected={sortBy === "volume"}
-          onPress={() => setSortBy("volume")}
-          style={styles.sortChip}
-          mode={sortBy === "volume" ? "flat" : "outlined"}
-        >
-          Volume
-        </Chip>
+          <Feather name="plus" size={22} color={colors.text} />
+        </Pressable>
       </View>
 
-      {/* Pools List */}
-      <FlatList
-        data={filteredPools}
-        renderItem={renderPoolCard}
-        keyExtractor={(item) => item.id || item.pair || item.name}
-        contentContainerStyle={styles.listContainer}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={[theme.colors.primary]}
-            tintColor={theme.colors.primary}
-          />
-        }
-        ListEmptyComponent={renderEmptyState}
-      />
+      <View style={styles.searchBox}>
+        <Feather name="search" size={18} color={colors.textMuted} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search pools"
+          placeholderTextColor={colors.textMuted}
+          value={search}
+          onChangeText={setSearch}
+        />
+      </View>
 
-      {/* Error Snackbar */}
-      <Snackbar
-        visible={!!error}
-        onDismiss={() => setError(null)}
-        action={{
-          label: "Retry",
-          onPress: () => loadPools(),
-        }}
-        duration={5000}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.chipsRow}
+        contentContainerStyle={styles.chipsContent}
       >
-        {error}
-      </Snackbar>
-    </View>
+        {filters.map((filter) => {
+          const active = filter === activeFilter;
+          return (
+            <Pressable
+              key={filter}
+              onPress={() => setActiveFilter(filter)}
+              style={[styles.chip, active && styles.chipActive]}
+            >
+              <Text style={[styles.chipText, active && styles.chipTextActive]}>
+                {filter}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+
+      {filtered.map((pool) => (
+        <AppCard key={pool.id} style={styles.poolCard}>
+          <View style={styles.poolTop}>
+            <View style={styles.poolLeft}>
+              <TokenPair tokens={pool.assets} />
+              <View style={styles.poolNameWrap}>
+                <Text style={styles.poolName}>{pool.name}</Text>
+                <View style={styles.tagRow}>
+                  <Pill
+                    label={pool.type}
+                    tone={pool.type === "Stable" ? "purple" : "brand"}
+                  />
+                  <Pill
+                    label={pool.risk}
+                    tone={riskTone[pool.risk] || "neutral"}
+                  />
+                </View>
+              </View>
+            </View>
+            <View style={styles.apyWrap}>
+              <Text style={styles.apy}>{pool.apy}</Text>
+              <Text style={styles.apyLabel}>APY</Text>
+            </View>
+          </View>
+
+          <View style={styles.metrics}>
+            <View style={styles.metric}>
+              <Text style={styles.metricLabel}>TVL</Text>
+              <Text style={styles.metricValue}>{pool.tvl}</Text>
+            </View>
+            <View style={styles.metric}>
+              <Text style={styles.metricLabel}>24h Vol</Text>
+              <Text style={styles.metricValue}>{pool.volume24h}</Text>
+            </View>
+            <View style={styles.metric}>
+              <Text style={styles.metricLabel}>Fee</Text>
+              <Text style={styles.metricValue}>{pool.fee}</Text>
+            </View>
+          </View>
+
+          <View style={styles.utilRow}>
+            <Text style={styles.utilLabel}>Utilization</Text>
+            <Text style={styles.utilValue}>{pool.utilization}%</Text>
+          </View>
+          <View style={styles.utilTrack}>
+            <View
+              style={[styles.utilFill, { width: `${pool.utilization}%` }]}
+            />
+          </View>
+
+          <View style={styles.actions}>
+            <GradientButton
+              label="Add Liquidity"
+              size="sm"
+              style={styles.flex}
+              onPress={() => navigation.navigate("CreatePool")}
+            />
+            <GradientButton
+              label="Details"
+              variant="outline"
+              size="sm"
+              style={styles.detailBtn}
+              onPress={() => navigation.navigate("CreatePool")}
+            />
+          </View>
+        </AppCard>
+      ))}
+
+      {filtered.length === 0 ? (
+        <View style={styles.empty}>
+          <Feather name="inbox" size={28} color={colors.textMuted} />
+          <Text style={styles.emptyText}>No pools match your filters.</Text>
+        </View>
+      ) : null}
+    </Screen>
   );
 };
 
-// Mock data for development/testing
-const getMockPools = () => [
-  {
-    id: "pool1",
-    name: "synBTC/synUSD",
-    pair: "synBTC/synUSD",
-    token0: "synBTC",
-    token1: "synUSD",
-    protocol: "Fluxion AMM",
-    tvl: 10500000,
-    apr: 12.5,
-    volume_24h: 2100000,
-    fees_24h: 6300,
-    utilization: 0.72,
-    stable: false,
-    verified: true,
-    incentivized: true,
-  },
-  {
-    id: "pool2",
-    name: "synETH/synUSD",
-    pair: "synETH/synUSD",
-    token0: "synETH",
-    token1: "synUSD",
-    protocol: "Fluxion AMM",
-    tvl: 8200000,
-    apr: 10.8,
-    volume_24h: 1640000,
-    fees_24h: 4920,
-    utilization: 0.65,
-    stable: false,
-    verified: true,
-    incentivized: true,
-  },
-  {
-    id: "pool3",
-    name: "synETH/synBTC",
-    pair: "synETH/synBTC",
-    token0: "synETH",
-    token1: "synBTC",
-    protocol: "Fluxion AMM",
-    tvl: 5100000,
-    apr: 8.2,
-    volume_24h: 816000,
-    fees_24h: 2448,
-    utilization: 0.58,
-    stable: false,
-    verified: true,
-    incentivized: false,
-  },
-  {
-    id: "pool4",
-    name: "synUSD/USDC",
-    pair: "synUSD/USDC",
-    token0: "synUSD",
-    token1: "USDC",
-    protocol: "Fluxion Stable",
-    tvl: 15000000,
-    apr: 5.5,
-    volume_24h: 3000000,
-    fees_24h: 900,
-    utilization: 0.85,
-    stable: true,
-    verified: true,
-    incentivized: true,
-  },
-  {
-    id: "pool5",
-    name: "synGOLD/synUSD",
-    pair: "synGOLD/synUSD",
-    token0: "synGOLD",
-    token1: "synUSD",
-    protocol: "Fluxion AMM",
-    tvl: 3500000,
-    apr: 15.2,
-    volume_24h: 700000,
-    fees_24h: 2100,
-    utilization: 0.45,
-    stable: false,
-    verified: true,
-    incentivized: true,
-  },
-];
-
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 16,
-  },
-  searchBar: {
-    margin: 16,
-    marginBottom: 8,
-  },
-  sortContainer: {
+  flex: { flex: 1 },
+  header: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 16,
-    paddingBottom: 8,
+    marginTop: spacing.md,
+    marginBottom: spacing.lg,
   },
-  sortLabel: {
-    fontSize: 14,
-    marginRight: 8,
-    opacity: 0.7,
+  title: { color: colors.text, fontSize: 24, fontWeight: "800" },
+  subtitle: { color: colors.textSecondary, fontSize: 14, marginTop: 2 },
+  createBtn: {
+    width: 46,
+    height: 46,
+    borderRadius: radius.md,
+    backgroundColor: colors.brand[500],
+    alignItems: "center",
+    justifyContent: "center",
   },
-  sortChip: {
-    marginRight: 8,
+  searchBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.card,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: spacing.md,
+    marginBottom: spacing.md,
+    gap: spacing.sm,
   },
-  listContainer: {
-    padding: 16,
-    paddingTop: 8,
+  searchInput: {
+    flex: 1,
+    color: colors.text,
+    paddingVertical: 10,
+    fontSize: 15,
   },
-  card: {
-    marginBottom: 12,
-    elevation: 2,
+  chipsRow: { marginBottom: spacing.lg },
+  chipsContent: { gap: spacing.sm, paddingRight: spacing.lg },
+  chip: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: 8,
+    borderRadius: radius.pill,
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  poolHeader: {
+  chipActive: {
+    backgroundColor: colors.brand[500],
+    borderColor: colors.brand[500],
+  },
+  chipText: { color: colors.textSecondary, fontSize: 13, fontWeight: "600" },
+  chipTextActive: { color: colors.text },
+  poolCard: { marginBottom: spacing.md },
+  poolTop: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 12,
+    alignItems: "center",
   },
-  poolInfo: {
+  poolLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
     flex: 1,
   },
-  poolName: {
-    fontSize: 18,
-    fontWeight: "bold",
+  poolNameWrap: { flex: 1 },
+  poolName: { color: colors.text, fontSize: 16, fontWeight: "700" },
+  tagRow: { flexDirection: "row", gap: 6, marginTop: 4 },
+  apyWrap: { alignItems: "flex-end" },
+  apy: { color: colors.success, fontSize: 20, fontWeight: "800" },
+  apyLabel: { color: colors.textMuted, fontSize: 10 },
+  metrics: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: spacing.lg,
+    marginBottom: spacing.md,
+  },
+  metric: { flex: 1 },
+  metricLabel: { color: colors.textMuted, fontSize: 11 },
+  metricValue: {
+    color: colors.text,
+    fontSize: 14,
+    fontWeight: "600",
+    marginTop: 2,
+  },
+  utilRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 4,
   },
-  poolProtocol: {
-    fontSize: 12,
-    opacity: 0.6,
+  utilLabel: { color: colors.textMuted, fontSize: 11 },
+  utilValue: { color: colors.textSecondary, fontSize: 11, fontWeight: "600" },
+  utilTrack: {
+    height: 5,
+    borderRadius: radius.pill,
+    backgroundColor: colors.gray[700],
+    overflow: "hidden",
+    marginBottom: spacing.lg,
   },
-  aprContainer: {
-    alignItems: "flex-end",
-    paddingLeft: 12,
+  utilFill: {
+    height: 5,
+    borderRadius: radius.pill,
+    backgroundColor: colors.brand[500],
   },
-  aprValue: {
-    fontSize: 24,
-    fontWeight: "bold",
-  },
-  aprLabel: {
-    fontSize: 12,
-    opacity: 0.6,
-  },
-  statsGrid: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderTopColor: "#eee",
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
-    marginBottom: 12,
-  },
-  statItem: {
-    flex: 1,
-  },
-  statLabel: {
-    fontSize: 11,
-    opacity: 0.6,
-    marginBottom: 4,
-  },
-  statValue: {
-    fontSize: 13,
-    fontWeight: "600",
-  },
-  utilizationContainer: {
-    marginBottom: 12,
-  },
-  utilizationHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 6,
-  },
-  utilizationLabel: {
-    fontSize: 12,
-    opacity: 0.6,
-  },
-  utilizationValue: {
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  progressBar: {
-    height: 6,
-    borderRadius: 3,
-  },
-  tagsContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 6,
-  },
-  tagChip: {
-    height: 24,
-    marginRight: 6,
-  },
-  tagChipText: {
-    fontSize: 11,
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-  },
-  emptyState: {
-    flex: 1,
-    justifyContent: "center",
+  actions: { flexDirection: "row", gap: spacing.sm },
+  detailBtn: { paddingHorizontal: spacing.lg },
+  empty: {
     alignItems: "center",
-    paddingVertical: 60,
+    paddingVertical: spacing.xxl,
+    gap: spacing.sm,
   },
-  emptyText: {
-    fontSize: 16,
-    fontWeight: "600",
-    marginTop: 16,
-    textAlign: "center",
-  },
-  emptySubtext: {
-    fontSize: 14,
-    marginTop: 8,
-    textAlign: "center",
-  },
+  emptyText: { color: colors.textMuted },
 });
 
 export default PoolsScreen;

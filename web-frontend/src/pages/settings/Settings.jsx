@@ -52,10 +52,19 @@ import {
   FiUser,
   FiX,
 } from "react-icons/fi";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../lib/auth-context.jsx";
 import { useWeb3 } from "../../lib/web3-config.jsx";
 
 const Settings = () => {
   const { isConnected, account } = useWeb3();
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
   const cardBg = useColorModeValue("gray.800", "gray.700");
   const borderColor = useColorModeValue("gray.700", "gray.600");
   const subTextColor = useColorModeValue("gray.400", "gray.400");
@@ -629,6 +638,49 @@ const Settings = () => {
               <Button leftIcon={<FiX />} colorScheme="red" variant="outline">
                 Disconnect All Applications
               </Button>
+
+              <Divider my={6} />
+
+              <Heading size="md" mb={4}>
+                Account Session
+              </Heading>
+              <Card bg="gray.700" variant="outline">
+                <CardBody>
+                  <Flex
+                    justify="space-between"
+                    align={{ base: "start", sm: "center" }}
+                    direction={{ base: "column", sm: "row" }}
+                    gap={3}
+                  >
+                    <HStack>
+                      <Avatar
+                        size="sm"
+                        name={user?.first_name || user?.email}
+                        bgGradient="linear(to-r, brand.500, accent.500)"
+                      />
+                      <VStack align="start" spacing={0}>
+                        <Text fontWeight="bold">
+                          {user?.first_name
+                            ? `${user.first_name} ${user.last_name || ""}`.trim()
+                            : user?.username || "Signed in"}
+                        </Text>
+                        <Text fontSize="xs" color={subTextColor}>
+                          {user?.email}
+                        </Text>
+                      </VStack>
+                    </HStack>
+                    <Button
+                      size="sm"
+                      colorScheme="red"
+                      variant="outline"
+                      leftIcon={<FiLogOut />}
+                      onClick={handleSignOut}
+                    >
+                      Sign out
+                    </Button>
+                  </Flex>
+                </CardBody>
+              </Card>
             </Box>
           </TabPanel>
 

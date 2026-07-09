@@ -92,7 +92,9 @@ describe("API Client - Token Management", () => {
 
       expect(AsyncStorage.multiRemove).toHaveBeenCalledWith([
         "@fluxion_auth_token",
+        "@fluxion_refresh_token",
         "@fluxion_token_expiry",
+        "@fluxion_user",
       ]);
     });
 

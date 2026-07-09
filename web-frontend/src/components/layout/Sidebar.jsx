@@ -15,6 +15,8 @@ import {
   FiExternalLink,
   FiGrid,
   FiHome,
+  FiList,
+  FiPieChart,
   FiSettings,
 } from "react-icons/fi";
 import { NavLink, useLocation } from "react-router-dom";
@@ -104,6 +106,12 @@ const Sidebar = () => {
         </NavItem>
         <NavItem icon={FiDollarSign} to="/synthetics">
           Synthetic Assets
+        </NavItem>
+        <NavItem icon={FiPieChart} to="/portfolio">
+          Portfolio
+        </NavItem>
+        <NavItem icon={FiList} to="/transactions">
+          Transactions
         </NavItem>
         <NavItem icon={FiBarChart2} to="/analytics">
           Analytics
