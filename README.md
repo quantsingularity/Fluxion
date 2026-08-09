@@ -9,7 +9,7 @@
 Fluxion is a cutting-edge synthetic asset liquidity engine that leverages zero-knowledge proofs and cross-chain technology to provide efficient, secure, and scalable liquidity for synthetic assets across multiple blockchain networks.
 
 <div align="center">
-  <img src="docs/images/Fluxion_dashboard.bmp" alt="Fluxion Dashboard" width="80%">
+  <img src="docs/images/homepage.bmp" alt="Fluxion HomePage" width="80%">
 </div>
 
 ---
