@@ -5,14 +5,14 @@ import "forge-std/Test.sol";
 import "../contracts/LiquidityPoolManager.sol";
 
 contract LiquidityPoolTest is Test {
-    LiquidityPoolManager pool;
+    FluxionLiquidityPoolManager pool;
     address[] assets;
     uint256[] weights;
 
     function setUp() public {
-        pool = new LiquidityPoolManager();
+        pool = new FluxionLiquidityPoolManager();
         assets = [address(1), address(2)];
-        weights = [5e17, 5e17]; // 50/50 weights
+        weights = [5e17, 5e17];
     }
 
     function testPoolCreation() public {

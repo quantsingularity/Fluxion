@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@chainlink/contracts/src/v0.8/ChainlinkClient.sol";
-import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
+import "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 
 contract SyntheticAssetFactory is Ownable, ReentrancyGuard, ChainlinkClient {
     using SafeERC20 for IERC20;
@@ -82,7 +82,7 @@ contract SyntheticAssetFactory is Ownable, ReentrancyGuard, ChainlinkClient {
     );
 
     constructor() Ownable() {
-        setPublicChainlinkToken();
+        _setPublicChainlinkToken();
     }
 
     function createSynthetic(
@@ -247,13 +247,13 @@ contract SyntheticAssetFactory is Ownable, ReentrancyGuard, ChainlinkClient {
         SyntheticAsset storage asset = syntheticAssets[_assetId];
         require(asset.active, "Asset not active");
 
-        Chainlink.Request memory req = buildChainlinkRequest(
+        Chainlink.Request memory req = _buildChainlinkRequest(
             asset.clJobId,
             address(this),
             this.fulfillPriceUpdate.selector
         );
         req.add("assetId", _b32str(_assetId));
-        bytes32 reqId = sendChainlinkRequestTo(
+        bytes32 reqId = _sendChainlinkRequestTo(
             asset.clOracle,
             req,
             asset.clFee

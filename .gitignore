@@ -326,15 +326,31 @@ DerivedData/
 # ---------------------------------------------------------------
 # Blockchain (Foundry, Anchor, OpenZeppelin)
 # ---------------------------------------------------------------
+
+# Deployment artifacts
 deployments/localhost/
 deployments/hardhat/
+
+# Foundry
 broadcast/
 !broadcast/*/31337/
-/lib/
+cache/
+out/
+
+# Foundry dependencies
+lib/
+
+# Anchor
 .anchor/
+
+# OpenZeppelin
 .openzeppelin/
+
+# Flattened contracts
 flattened/
 flat/
+
+# Coverage and gas reports
 coverage.json
 gas-report.txt
 gasreport.txt

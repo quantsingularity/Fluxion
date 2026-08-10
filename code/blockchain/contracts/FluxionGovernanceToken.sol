@@ -23,7 +23,6 @@ import "@openzeppelin/contracts/utils/math/Math.sol";
 contract FluxionGovernanceToken is
     ERC20,
     ERC20Votes,
-    ERC20Permit,
     AccessControl,
     ReentrancyGuard,
     Pausable
