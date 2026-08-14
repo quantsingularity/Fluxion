@@ -338,7 +338,7 @@ cache/
 out/
 
 # Foundry dependencies
-lib/
+/lib/
 
 # Anchor
 .anchor/
