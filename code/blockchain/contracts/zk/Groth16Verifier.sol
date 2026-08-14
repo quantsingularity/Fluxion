@@ -114,8 +114,8 @@ contract Groth16Verifier {
             0x163e4b1a29da9e8e5e5c2c9b4b0e9f7a6e3d2c1b0a9f8e7d6c5b4a3f2e1d0c9b
         ];
         vk.ic[4] = [
-            0x2a1b3c4d5e6f7089abcdef0123456789abcdef0123456789abcdef0123456789ab,
-            0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef01
+            0x2a1b3c4d5e6f7089abcdef0123456789abcdef0123456789abcdef0123456789,
+            0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
         ];
     }
 

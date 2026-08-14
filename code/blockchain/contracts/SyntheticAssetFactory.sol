@@ -8,8 +8,14 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@chainlink/contracts/src/v0.8/ChainlinkClient.sol";
 import "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
+import "./interfaces/IFluxionVault.sol";
 
-contract SyntheticAssetFactory is Ownable, ReentrancyGuard, ChainlinkClient {
+contract SyntheticAssetFactory is
+    Ownable,
+    ReentrancyGuard,
+    ChainlinkClient,
+    IFluxionVault
+{
     using SafeERC20 for IERC20;
     using Chainlink for Chainlink.Request;
 
@@ -252,7 +258,7 @@ contract SyntheticAssetFactory is Ownable, ReentrancyGuard, ChainlinkClient {
             address(this),
             this.fulfillPriceUpdate.selector
         );
-        req.add("assetId", _b32str(_assetId));
+        req._add("assetId", _b32str(_assetId));
         bytes32 reqId = _sendChainlinkRequestTo(
             asset.clOracle,
             req,
@@ -303,6 +309,24 @@ contract SyntheticAssetFactory is Ownable, ReentrancyGuard, ChainlinkClient {
         return assetIds.length;
     }
 
+    /// @inheritdoc IFluxionVault
+    function getOraclePrice(
+        bytes32 _assetId
+    ) external view returns (uint256 price18, uint256 updatedAt) {
+        SyntheticAsset storage asset = syntheticAssets[_assetId];
+        return (asset.price, asset.priceTimestamp);
+    }
+
+    /// @inheritdoc IFluxionVault
+    function collateralOf(bytes32 _assetId) external view returns (address) {
+        return syntheticAssets[_assetId].collateralToken;
+    }
+
+    /// @inheritdoc IFluxionVault
+    function syntheticOf(bytes32 _assetId) external view returns (address) {
+        return syntheticAssets[_assetId].syntheticToken;
+    }
+
     function _pullAggregatorPrice(bytes32 _assetId) internal {
         SyntheticAsset storage asset = syntheticAssets[_assetId];
         if (asset.priceOracle == address(0)) return;
@@ -316,6 +340,8 @@ contract SyntheticAssetFactory is Ownable, ReentrancyGuard, ChainlinkClient {
         );
 
         uint8 dec = feed.decimals();
+        // casting to 'uint256' is safe because 'answer > 0' was just checked
+        // forge-lint: disable-next-line(unsafe-typecast)
         uint256 p = uint256(answer);
         if (dec < 18) {
             p = p * (10 ** (18 - dec));

@@ -2,7 +2,13 @@
 CollateralEngine
 ════════════════
 Pure-Python implementation of the Fluxion synthetic-asset collateralisation
-rules, mirroring the logic in SyntheticAssetFactory.sol.
+rules. Position/mint/burn accounting (get_collateral_ratio, mint, burn,
+stability fee) mirrors SyntheticAssetFactory.sol's own math; the tiered
+liquidation bonus (SOFT/HARD/CRIT) mirrors SyntheticLiquidationEngine.sol's
+_computeBonus specifically — the vault contract's own direct liquidate()
+path uses a single flat LIQ_BONUS (5%) instead, since it has no tiering.
+This module intentionally mirrors the engine's richer tiered behavior, as
+that's the liquidation path the protocol's keeper bot actually drives.
 
 This module is the authoritative back-end source of truth used by:
   • The risk-management service (real-time CR monitoring)
@@ -23,7 +29,11 @@ import time
 from dataclasses import dataclass
 from typing import Dict, Optional, Tuple
 
-# ─── Protocol constants (must match SyntheticAssetFactory.sol) ───────────────
+# ─── Protocol constants ────────────────────────────────────────────────────
+# CR thresholds, MAX_LIQUIDATION_RATIO, STABILITY_FEE_BPS, SECONDS_PER_YEAR
+# and ORACLE_STALENESS must match SyntheticAssetFactory.sol.
+# LIQ_BONUS_SOFT/HARD/CRIT must match SyntheticLiquidationEngine.sol's
+# BONUS_SOFT/HARD/CRIT (the vault itself only has a single flat LIQ_BONUS).
 
 BPS: int = 10_000  # Basis-point denominator
 MIN_CR_BPS: int = 15_000  # 150 % minimum collateral ratio

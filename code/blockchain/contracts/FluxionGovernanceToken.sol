@@ -632,20 +632,69 @@ contract FluxionGovernanceToken is
             dailyTransfers[from][currentDay] = dailyTransferred + amount;
         }
 
-        // Collect treasury fee on transfers (excluding staking operations)
-        if (
-            treasuryFeeRate > 0 && from != address(this) && to != address(this)
-        ) {
-            uint256 fee = (amount * treasuryFeeRate) / REWARD_PRECISION;
-            if (fee > 0) {
-                totalFeesCollected += fee;
-                // Fee is deducted from the transfer amount
-                super._beforeTokenTransfer(from, treasury, fee);
-                amount -= fee;
-            }
+        super._beforeTokenTransfer(from, to, amount);
+    }
+
+    /**
+     * @dev Splits a user-initiated transfer into a fee leg (sent to this
+     *      contract's own balance and tracked via totalFeesCollected, to be
+     *      swept to the treasury via withdrawFeesToTreasury) and a net leg
+     *      (sent to the recipient).
+     *
+     *      This has to live here, driving two real `_transfer` calls, rather
+     *      than inside `_beforeTokenTransfer`: that hook's `amount` parameter
+     *      is a local copy, so mutating it there does not affect the amount
+     *      ERC20._transfer actually moves, and calling `_beforeTokenTransfer`
+     *      itself never moves any balance since it is a hook, not a
+     *      transfer. Splitting the transfer at this level is what actually
+     *      collects a fee on-chain.
+     * @param from Sender address
+     * @param to Recipient address
+     * @param amount Gross amount requested by the sender
+     */
+    function _transferWithFee(
+        address from,
+        address to,
+        uint256 amount
+    ) internal {
+        uint256 fee = 0;
+        if (treasuryFeeRate > 0) {
+            fee = (amount * treasuryFeeRate) / REWARD_PRECISION;
         }
 
-        super._beforeTokenTransfer(from, to, amount);
+        if (fee > 0) {
+            totalFeesCollected += fee;
+            _transfer(from, address(this), fee);
+            _transfer(from, to, amount - fee);
+        } else {
+            _transfer(from, to, amount);
+        }
+    }
+
+    /**
+     * @dev Overridden so ordinary user transfers route through
+     *      `_transferWithFee` and actually collect the treasury fee.
+     *      Internal protocol movements (staking, vesting, fee withdrawal)
+     *      call `_transfer` directly and are unaffected, so they stay fee
+     *      exempt without needing an explicit address(this) carve-out here.
+     */
+    function transfer(
+        address to,
+        uint256 amount
+    ) public override returns (bool) {
+        _transferWithFee(msg.sender, to, amount);
+        return true;
+    }
+
+    /// @dev See {transfer}; same fee-splitting behavior for transferFrom.
+    function transferFrom(
+        address from,
+        address to,
+        uint256 amount
+    ) public override returns (bool) {
+        _spendAllowance(from, msg.sender, amount);
+        _transferWithFee(from, to, amount);
+        return true;
     }
 
     function _afterTokenTransfer(
@@ -675,7 +724,7 @@ contract FluxionGovernanceToken is
      * @param account The address of the user.
      * @return The current voting power.
      */
-    function getVotes(address account) external view returns (uint256) {
+    function getVotes(address account) public view override returns (uint256) {
         return super.getVotes(account);
     }
 

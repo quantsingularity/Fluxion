@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
+import "./interfaces/IFluxionVault.sol";
 
 /**
  * @title SyntheticLiquidationEngine
@@ -32,31 +33,6 @@ import "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.so
  *  CR  100 %–110 % (HARD zone)   → BONUS_HARD   =  8 %
  *  CR < 100 %     (CRITICAL zone)→ BONUS_CRIT   = 10 % + Insurance Fund top-up
  */
-interface IFluxionVault {
-    function getPosition(
-        bytes32 assetId,
-        address user
-    )
-        external
-        view
-        returns (
-            uint256 collateral,
-            uint256 debt,
-            uint256 ratioBPS,
-            bool isLiquidatable
-        );
-
-    function liquidate(
-        bytes32 assetId,
-        address user,
-        uint256 debtRepaid
-    ) external;
-
-    function getOraclePrice(
-        bytes32 assetId
-    ) external view returns (uint256 price18, uint256 updatedAt);
-}
-
 contract SyntheticLiquidationEngine is AccessControl, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
@@ -172,12 +148,42 @@ contract SyntheticLiquidationEngine is AccessControl, ReentrancyGuard {
         address _user,
         uint256 _debtRepaid
     ) external nonReentrant {
+        _liquidate(_assetId, _user, _debtRepaid, msg.sender);
+    }
+
+    /**
+     * @notice Identical liquidation logic to {liquidate}, but lets
+     *         batchLiquidate credit the keeper that triggered the batch
+     *         (rather than this contract itself) as the liquidator.
+     * @dev    Only callable by this contract, via the try/catch in
+     *         batchLiquidate below — try/catch requires an external call
+     *         boundary, so this can't just be the internal helper directly.
+     *         The `msg.sender == address(this)` check is what prevents
+     *         anyone else from spoofing an arbitrary `_liquidator` and
+     *         redirecting someone else's liquidation proceeds to themselves.
+     */
+    function batchLiquidateSingle(
+        bytes32 _assetId,
+        address _user,
+        uint256 _debtRepaid,
+        address _liquidator
+    ) external nonReentrant {
+        require(msg.sender == address(this), "Internal only");
+        _liquidate(_assetId, _user, _debtRepaid, _liquidator);
+    }
+
+    function _liquidate(
+        bytes32 _assetId,
+        address _user,
+        uint256 _debtRepaid,
+        address _liquidator
+    ) internal {
         require(!liquidationsPaused, "Liquidations paused");
-        require(
-            hasRole(LIQUIDATOR_ROLE, msg.sender) ||
-                !hasRole(LIQUIDATOR_ROLE, address(0)),
-            "Not authorised"
-        );
+        // Liquidation is intentionally permissionless (mirrors
+        // SyntheticAssetFactory.liquidate): anyone can liquidate an
+        // undercollateralised position, which is what keeps the protocol
+        // solvent. LIQUIDATOR_ROLE is not used to gate this entry point;
+        // it exists for off-chain indexing / potential future tiers only.
 
         (
             uint256 collateral,
@@ -200,23 +206,54 @@ contract SyntheticLiquidationEngine is AccessControl, ReentrancyGuard {
             _user
         );
 
-        // Execute liquidation via the vault
-        vault.liquidate(_assetId, _user, _debtRepaid);
+        // Execute liquidation via the vault. Vault implementations burn the
+        // repaid debt from *their own caller's* balance (this contract), not
+        // from the liquidator directly, so the repaid amount of synthetic
+        // tokens must be pulled from the liquidator into this contract first
+        // (the liquidator must have approved this contract beforehand). The
+        // vault also sends the seized collateral to its immediate caller
+        // (this contract), which must be forwarded on to the liquidator.
+        IERC20 syntheticToken = IERC20(vault.syntheticOf(_assetId));
+        IERC20 collateralToken = IERC20(vault.collateralOf(_assetId));
+        syntheticToken.safeTransferFrom(
+            _liquidator,
+            address(this),
+            _debtRepaid
+        );
 
-        // Collateral seized by liquidator (proportional share + bonus)
+        uint256 collateralBefore = collateralToken.balanceOf(address(this));
+        vault.liquidate(_assetId, _user, _debtRepaid);
+        uint256 actualReceived =
+            collateralToken.balanceOf(address(this)) - collateralBefore;
+
+        // Collateral entitlement per this engine's own tiered incentive
+        // ladder (proportional share + tier bonus).
         uint256 rawShare = (collateral * _debtRepaid) / debt;
         uint256 bonusAmount = (rawShare * bonusBPS) / BPS;
         uint256 totalSeize = rawShare + bonusAmount;
 
-        // Handle bad-debt: if collateral was insufficient cover via insurance
-        if (totalSeize > collateral) {
-            uint256 shortfall = totalSeize - collateral;
-            totalSeize = collateral;
-            _coverBadDebt(_assetId, _user, shortfall);
+        // The vault applies its own (generally more conservative) fixed
+        // liquidation bonus, so it will not always hand over enough
+        // collateral to cover this engine's full tiered entitlement —
+        // e.g. a HARD/CRIT tier bonus (8%/10%) exceeding the vault's fixed
+        // bonus. Never forward more than was actually received; the
+        // insurance fund covers any shortfall between what this engine
+        // promised the liquidator and what the vault actually paid out.
+        if (totalSeize > actualReceived) {
+            uint256 shortfall = totalSeize - actualReceived;
+            totalSeize = actualReceived;
+            _coverBadDebt(_assetId, _user, shortfall, _liquidator);
+        }
+
+        // Forward the seized collateral (received from the vault above) to
+        // the liquidator that triggered this call — the original keeper in
+        // the batchLiquidate case, not this contract.
+        if (totalSeize > 0) {
+            collateralToken.safeTransfer(_liquidator, totalSeize);
         }
 
         // Update liquidator statistics
-        LiquidatorStats storage stats = liquidatorStats[msg.sender];
+        LiquidatorStats storage stats = liquidatorStats[_liquidator];
         stats.totalLiquidations++;
         stats.totalBonusEarned += bonusAmount;
         stats.totalDebtRepaid += _debtRepaid;
@@ -225,13 +262,13 @@ contract SyntheticLiquidationEngine is AccessControl, ReentrancyGuard {
         bytes32 posKey = _posKey(_assetId, _user);
         if (auctions[posKey].active) {
             auctions[posKey].active = false;
-            emit AuctionClosed(posKey, msg.sender);
+            emit AuctionClosed(posKey, _liquidator);
         }
 
         emit LiquidationExecuted(
             _assetId,
             _user,
-            msg.sender,
+            _liquidator,
             _debtRepaid,
             totalSeize,
             bonusBPS,
@@ -302,8 +339,15 @@ contract SyntheticLiquidationEngine is AccessControl, ReentrancyGuard {
             "Array length mismatch"
         );
         for (uint256 i; i < assetIds.length; ++i) {
-            try this.liquidate(assetIds[i], users[i], debtAmounts[i]) {
-                // success — event emitted inside liquidate()
+            try
+                this.batchLiquidateSingle(
+                    assetIds[i],
+                    users[i],
+                    debtAmounts[i],
+                    msg.sender
+                )
+            {
+                // success — event emitted inside _liquidate()
             } catch {
                 // Swallow individual failures; log via subgraph / off-chain
             }
@@ -340,7 +384,8 @@ contract SyntheticLiquidationEngine is AccessControl, ReentrancyGuard {
 
     function _computeBonus(
         uint256 ratioBPS,
-        bytes32 /*_assetId*/,
+        bytes32,
+        /*_assetId*/
         address /*_user*/
     ) internal pure returns (uint256 bonusBPS, uint256 tier) {
         if (ratioBPS < LIQ_CR_CRIT) {
@@ -355,14 +400,15 @@ contract SyntheticLiquidationEngine is AccessControl, ReentrancyGuard {
     function _coverBadDebt(
         bytes32 _assetId,
         address _user,
-        uint256 shortfall
+        uint256 shortfall,
+        address _liquidator
     ) internal {
         totalBadDebt += shortfall;
         // Attempt to draw from the insurance fund
         uint256 available = insuranceFund.balanceOf(address(this));
         uint256 topUp = shortfall > available ? available : shortfall;
         if (topUp > 0) {
-            insuranceFund.safeTransfer(msg.sender, topUp);
+            insuranceFund.safeTransfer(_liquidator, topUp);
             emit InsuranceFundTopUp(_assetId, _user, topUp);
         }
         emit BadDebtRecorded(_assetId, _user, shortfall);

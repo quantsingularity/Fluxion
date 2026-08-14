@@ -1,13 +1,16 @@
 import Feather from "@expo/vector-icons/Feather";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
+  Alert,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
+import { fetchAssets } from "../api/client";
 import AppCard from "../components/ui/AppCard";
 import { Sparkline } from "../components/ui/Charts";
 import GradientButton from "../components/ui/GradientButton";
@@ -18,28 +21,110 @@ import { colors, radius, spacing } from "../theme/theme";
 
 const categories = ["All", "Stocks", "Commodities", "Forex"];
 
+// Normalise a backend synthetic-asset record into the shape the card
+// expects, tolerating missing fields so live and demo data render
+// identically. The backend's category-like grouping isn't provided yet
+// (only underlying_asset), so real records fall under "All" until that's
+// added server-side.
+const normalizeAsset = (asset, index) => ({
+  id: asset.id || `asset-${index}`,
+  symbol: asset.symbol || asset.underlying_asset || `ASSET${index}`,
+  name: asset.name || asset.underlying_asset || "Synthetic asset",
+  category: asset.category || null,
+  price:
+    typeof asset.price === "number"
+      ? `$${asset.price.toLocaleString(undefined, { maximumFractionDigits: 2 })}`
+      : asset.price || "-",
+  change:
+    typeof asset.price_change_24h === "number"
+      ? `${asset.price_change_24h >= 0 ? "+" : ""}${asset.price_change_24h.toFixed(1)}%`
+      : asset.change || "-",
+  up:
+    typeof asset.price_change_24h === "number"
+      ? asset.price_change_24h >= 0
+      : asset.up !== false,
+  collateral:
+    typeof asset.collateral_ratio === "number"
+      ? `${Math.round(asset.collateral_ratio * 100)}%`
+      : asset.collateral || "-",
+  history: asset.history || null,
+});
+
 const SyntheticsScreen = () => {
   const [category, setCategory] = useState("All");
   const [search, setSearch] = useState("");
+  const [assets, setAssets] = useState(syntheticAssets);
+  const [refreshing, setRefreshing] = useState(false);
+  const [isLive, setIsLive] = useState(false);
+
+  const load = async () => {
+    try {
+      const data = await fetchAssets();
+      if (Array.isArray(data) && data.length) {
+        setAssets(data.map(normalizeAsset));
+        setIsLive(true);
+      }
+    } catch {
+      setAssets(syntheticAssets);
+      setIsLive(false);
+    }
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await load();
+    setRefreshing(false);
+  };
+
+  const handleTrade = (asset) => {
+    // There's no on-chain swap/DEX function for synthetic assets in this
+    // protocol yet — only isolated mint/burn/liquidate on
+    // SyntheticAssetFactory.sol. Being upfront about that here rather than
+    // silently doing nothing when tapped.
+    Alert.alert(
+      "Trading not yet available",
+      `${asset.symbol} can be minted against collateral once wallet ` +
+        "connectivity is added to the mobile app, but there's no " +
+        "on-chain swap functionality for synthetic assets yet.",
+    );
+  };
 
   const filtered = useMemo(() => {
-    return syntheticAssets.filter((asset) => {
-      const matchesCat = category === "All" || asset.category === category;
+    return assets.filter((asset) => {
+      const matchesCat =
+        category === "All" || !asset.category || asset.category === category;
       const matchesSearch =
         !search ||
         asset.symbol.toLowerCase().includes(search.toLowerCase()) ||
         asset.name.toLowerCase().includes(search.toLowerCase());
       return matchesCat && matchesSearch;
     });
-  }, [category, search]);
+  }, [assets, category, search]);
 
   return (
-    <Screen>
+    <Screen
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor={colors.brand[400]}
+        />
+      }
+    >
       <View style={styles.header}>
         <Text style={styles.title}>Synthetic Assets</Text>
         <Text style={styles.subtitle}>
           Trade tokenized stocks, commodities and forex, 24/7.
         </Text>
+        {!isLive ? (
+          <Text style={styles.demoNotice}>
+            Showing demo data — live prices unavailable right now.
+          </Text>
+        ) : null}
       </View>
 
       <View style={styles.searchBox}>
@@ -89,10 +174,12 @@ const SyntheticsScreen = () => {
                 <Text style={styles.assetName}>{asset.name}</Text>
               </View>
             </View>
-            <Sparkline
-              data={asset.history}
-              color={asset.up ? colors.success : colors.danger}
-            />
+            {asset.history ? (
+              <Sparkline
+                data={asset.history}
+                color={asset.up ? colors.success : colors.danger}
+              />
+            ) : null}
           </View>
 
           <View style={styles.assetBottom}>
@@ -120,7 +207,7 @@ const SyntheticsScreen = () => {
                 label="Trade"
                 size="sm"
                 style={styles.tradeBtn}
-                onPress={() => {}}
+                onPress={() => handleTrade(asset)}
               />
             </View>
           </View>
@@ -134,6 +221,12 @@ const styles = StyleSheet.create({
   header: { marginTop: spacing.md, marginBottom: spacing.lg },
   title: { color: colors.text, fontSize: 24, fontWeight: "800" },
   subtitle: { color: colors.textSecondary, fontSize: 14, marginTop: 2 },
+  demoNotice: {
+    color: colors.warning,
+    fontSize: 12,
+    fontWeight: "600",
+    marginTop: 6,
+  },
   searchBox: {
     flexDirection: "row",
     alignItems: "center",

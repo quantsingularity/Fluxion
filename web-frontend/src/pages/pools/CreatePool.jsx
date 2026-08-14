@@ -31,6 +31,7 @@ import {
   useToast,
   VStack,
 } from "@chakra-ui/react";
+import { ethers } from "ethers";
 import { useState } from "react";
 import { FiAlertTriangle, FiInfo, FiPlus } from "react-icons/fi";
 import {
@@ -40,20 +41,35 @@ import {
   Tooltip as RechartsTooltip,
   ResponsiveContainer,
 } from "recharts";
+import { getAssetRegistry } from "../../lib/assets";
 import { useWeb3 } from "../../lib/web3-config.jsx";
 
 const CreatePool = () => {
-  const { isConnected } = useWeb3();
+  const {
+    isConnected,
+    createPool: createPoolOnChain,
+    isLoading: isSubmittingPool,
+    error: chainError,
+  } = useWeb3();
   const cardBg = useColorModeValue("gray.800", "gray.700");
   const borderColor = useColorModeValue("gray.700", "gray.600");
   const subTextColor = useColorModeValue("gray.400", "gray.400");
   const toast = useToast();
 
+  // Registry of real on-chain token + oracle addresses this form can use.
+  // See lib/assets.js: falls back to a verified Ethereum Mainnet reference
+  // set unless VITE_ASSET_REGISTRY_JSON configures this deployment's real
+  // addresses — only tokens with a verified oracle address are offered
+  // here, since createPool requires one oracle per asset.
+  const { assets: assetRegistry, isMainnetReference } = getAssetRegistry();
+  const availableTokens = assetRegistry.filter((a) => a.oracle);
+
   // State for pool creation
   const [poolType, setPoolType] = useState("weighted");
+  const [amplification, setAmplification] = useState(100);
   const [assets, setAssets] = useState([
-    { token: "ETH", weight: 50, amount: 0 },
-    { token: "USDC", weight: 50, amount: 0 },
+    { token: availableTokens[0]?.symbol ?? "", weight: 50, amount: 0 },
+    { token: availableTokens[1]?.symbol ?? "", weight: 50, amount: 0 },
   ]);
   const [swapFee, setSwapFee] = useState(0.3);
   const [showTooltip, setShowTooltip] = useState(false);
@@ -174,48 +190,84 @@ const CreatePool = () => {
     setAssets(newAssets);
   };
 
-  // Get next available token
+  // Get next available token from the registry
   const getNextAvailableToken = () => {
     const usedTokens = assets.map((a) => a.token);
-    const allTokens = [
-      "ETH",
-      "WBTC",
-      "USDC",
-      "DAI",
-      "LINK",
-      "UNI",
-      "AAVE",
-      "SNX",
-    ];
-    return allTokens.find((token) => !usedTokens.includes(token)) || "ETH";
+    const symbols = availableTokens.map((a) => a.symbol);
+    return (
+      symbols.find((symbol) => !usedTokens.includes(symbol)) ?? symbols[0] ?? ""
+    );
   };
 
-  // Create pool
-  const createPool = () => {
-    toast({
-      title: "Pool created successfully!",
-      description: "Your liquidity pool has been created and is now active.",
-      status: "success",
-      duration: 5000,
-      isClosable: true,
+  // Create pool on-chain via LiquidityPoolManager.createPool. Requires
+  // POOL_ADMIN_ROLE on the connected wallet — see web3-config.jsx.
+  const createPool = async () => {
+    const resolved = assets.map((a) =>
+      availableTokens.find((t) => t.symbol === a.token),
+    );
+    const missing = resolved.some((t) => !t || !t.oracle);
+    if (missing) {
+      toast({
+        title: "Missing oracle address",
+        description:
+          "One or more selected tokens don't have a configured price " +
+          "oracle in this deployment's asset registry, so a pool can't " +
+          "be created for them yet.",
+        status: "error",
+        duration: 6000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    const totalWeightPct = assets.reduce((s, a) => s + a.weight, 0);
+    // Convert percentage weights (sum ~100) to 18-decimal fixed point
+    // fractions summing to 1e18, matching what the contract expects.
+    const weights18 = assets.map((a) =>
+      ethers.parseUnits(String(a.weight / totalWeightPct), 18),
+    );
+    const fee18 = ethers.parseUnits(String(swapFee / 100), 18);
+
+    const poolId = await createPoolOnChain({
+      assets: resolved.map((t) => t.address),
+      weights: weights18,
+      fee: fee18,
+      amplification: BigInt(amplification),
+      oracles: resolved.map((t) => t.oracle),
+      heartbeats: resolved.map((t) => BigInt(t.oracleHeartbeatSeconds)),
     });
+
+    if (poolId) {
+      toast({
+        title: "Pool created successfully!",
+        description: `Pool ${poolId.slice(0, 10)}... is now active on-chain.`,
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+      });
+    } else if (chainError) {
+      toast({
+        title: "Pool creation failed",
+        description: chainError,
+        status: "error",
+        duration: 8000,
+        isClosable: true,
+      });
+    }
   };
 
-  // Calculate total value
+  // Calculate total value (illustrative USD estimate for the form's sizing
+  // display only — not used in the on-chain call, and not a live price feed).
   const calculateTotalValue = () => {
-    const tokenPrices = {
-      ETH: 1700,
+    const illustrativeUsdEstimate = {
+      WETH: 1700,
       WBTC: 42000,
       USDC: 1,
       DAI: 1,
-      LINK: 15,
-      UNI: 8,
-      AAVE: 80,
-      SNX: 3,
     };
 
     return assets.reduce((total, asset) => {
-      return total + asset.amount * tokenPrices[asset.token];
+      return total + asset.amount * (illustrativeUsdEstimate[asset.token] ?? 0);
     }, 0);
   };
 
@@ -400,14 +452,11 @@ const CreatePool = () => {
                             handleTokenChange(index, e.target.value)
                           }
                         >
-                          <option value="ETH">ETH</option>
-                          <option value="WBTC">WBTC</option>
-                          <option value="USDC">USDC</option>
-                          <option value="DAI">DAI</option>
-                          <option value="LINK">LINK</option>
-                          <option value="UNI">UNI</option>
-                          <option value="AAVE">AAVE</option>
-                          <option value="SNX">SNX</option>
+                          {availableTokens.map((t) => (
+                            <option key={t.symbol} value={t.symbol}>
+                              {t.symbol}
+                            </option>
+                          ))}
                         </Select>
                       </FormControl>
 
@@ -619,6 +668,14 @@ const CreatePool = () => {
               </TabPanels>
             </Tabs>
 
+            {isMainnetReference && (
+              <Text fontSize="xs" color="yellow.300" textAlign="center" mb={2}>
+                Using Ethereum Mainnet reference token/oracle addresses. Verify
+                these match your connected network before creating a pool, or
+                set VITE_ASSET_REGISTRY_JSON for this deployment.
+              </Text>
+            )}
+
             <Button
               width="full"
               size="lg"
@@ -630,8 +687,12 @@ const CreatePool = () => {
                 boxShadow: "lg",
               }}
               onClick={createPool}
+              isLoading={isSubmittingPool}
+              loadingText="Creating pool..."
               isDisabled={
-                !isConnected || assets.some((a) => !a.amount || a.amount <= 0)
+                !isConnected ||
+                assets.some((a) => !a.amount || a.amount <= 0) ||
+                availableTokens.length < 2
               }
             >
               Create Pool
@@ -640,6 +701,13 @@ const CreatePool = () => {
             {!isConnected && (
               <Text fontSize="sm" color="red.300" textAlign="center" mt={2}>
                 Please connect your wallet to create a pool
+              </Text>
+            )}
+
+            {isConnected && availableTokens.length < 2 && (
+              <Text fontSize="sm" color="red.300" textAlign="center" mt={2}>
+                This deployment's asset registry has fewer than 2 tokens with a
+                configured oracle — pools can't be created yet.
               </Text>
             )}
 

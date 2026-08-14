@@ -238,9 +238,11 @@ contract FluxionLiquidityPoolManager is AccessControl, ReentrancyGuard {
             uint256 price = getAssetPrice(pool.assets[i], _poolId);
             // Price is scaled from 1e8 (Chainlink default) to 1e18 for consistent calculation
             uint256 scaledPrice = (price * 1e10);
+            // Multiply before dividing (single final division) to avoid the
+            // precision loss that comes from dividing by totalWeight first.
             uint256 tokenAmount =
-                (((amountToRemove * pool.weights[i]) / totalWeight) * 1e18) /
-                    scaledPrice;
+                (amountToRemove * pool.weights[i] * 1e18) /
+                    (totalWeight * scaledPrice);
 
             if (tokenAmount > 0) {
                 IERC20(pool.assets[i]).safeTransfer(msg.sender, tokenAmount);
@@ -276,6 +278,8 @@ contract FluxionLiquidityPoolManager is AccessControl, ReentrancyGuard {
             "Oracle data too old"
         );
 
+        // casting to 'uint256' is safe because 'price > 0' was just checked
+        // forge-lint: disable-next-line(unsafe-typecast)
         return uint256(price);
     }
 
