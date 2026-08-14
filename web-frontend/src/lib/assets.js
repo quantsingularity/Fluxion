@@ -69,7 +69,9 @@ export const MAINNET_REFERENCE_ASSETS = [
 
 function readRegistryEnvVar() {
   const raw =
-    (typeof process !== "undefined" && process.env && process.env.VITE_ASSET_REGISTRY_JSON) ||
+    (typeof process !== "undefined" &&
+      process.env &&
+      process.env.VITE_ASSET_REGISTRY_JSON) ||
     undefined;
   if (!raw) return null;
   try {

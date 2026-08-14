@@ -50,11 +50,16 @@ function getPoolManagerContract(providerOrSigner) {
  */
 function describePoolTxError(err) {
   const raw =
-    err?.shortMessage || err?.reason || err?.error?.message || err?.message || "";
+    err?.shortMessage ||
+    err?.reason ||
+    err?.error?.message ||
+    err?.message ||
+    "";
   if (/AccessControl/i.test(raw) || /missing role/i.test(raw)) {
     return "This wallet doesn't have POOL_ADMIN_ROLE, so it can't create pools on-chain.";
   }
-  if (/Fee too high/i.test(raw)) return "Swap fee exceeds the pool manager's MAX_FEE.";
+  if (/Fee too high/i.test(raw))
+    return "Swap fee exceeds the pool manager's MAX_FEE.";
   if (/length mismatch/i.test(raw)) {
     return "Assets, weights, oracles, and heartbeats must all be the same length.";
   }
