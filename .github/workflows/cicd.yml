@@ -212,9 +212,9 @@ jobs:
 
       - name: Install Foundry dependencies
         run: |
-          forge install OpenZeppelin/openzeppelin-contracts@v4.9.6 --no-commit
-          forge install smartcontractkit/chainlink-brownie-contracts@1.2.0 --no-commit
-          forge install foundry-rs/forge-std --no-commit
+          forge install OpenZeppelin/openzeppelin-contracts@v4.9.6 --no-git
+          forge install smartcontractkit/chainlink-brownie-contracts@1.2.0 --no-git
+          forge install foundry-rs/forge-std --no-git
 
       - name: Cache Foundry build artifacts
         uses: actions/cache@v4
