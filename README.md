@@ -86,8 +86,6 @@ Fluxion/
 
 These modules are unit-tested and importable, but the live `/api/v1/predict` endpoint returns a deterministic placeholder forecast rather than calling into this library, and the `ml-service` container defined in Docker Compose is a minimal health and metrics stub with the same inference not yet wired in.
 
-Not part of this project, despite appearing in earlier drafts of this document: Chainlink CCIP or any other cross-chain messaging or bridging (Chainlink here is used only for price oracles and Any-API requests; the on-chain "bridge fee" is a fee parameter, not a working bridge), support for ten or more chains (three EVM networks are configured by default: Ethereum, Polygon, and BSC), on-chain reads or writes from the backend (`web3.py` is a declared but unused dependency), Celery, gRPC, Ray, Prophet, TimescaleDB, IPFS, ArgoCD, Cypress, and third-party AML watchlist screening (the AML service is an in-house rule that flags transactions of $10,000 or more).
-
 ## Technology Stack
 
 | Area                 | Technology                                                                                   |
@@ -105,7 +103,7 @@ Not part of this project, despite appearing in earlier drafts of this document: 
 | CI/CD                | GitHub Actions                                                                               |
 | Testing              | pytest (backend), Foundry (contracts), React Testing Library (web), Jest (mobile)            |
 
-Not part of this project, despite being common in this space: Celery, gRPC, Ray, Prophet, TimescaleDB, IPFS, ArgoCD, and Cypress. PostgreSQL is a real dependency but is not provisioned by the included Docker Compose file; point `DATABASE_URL` at an instance you run yourself.
+PostgreSQL is a real dependency but is not provisioned by the included Docker Compose file; point `DATABASE_URL` at an instance you run yourself.
 
 ## Architecture
 
@@ -219,7 +217,7 @@ npm test
 npm test
 ```
 
-The backend suite includes unit tests for auth, collateralization, the data pipeline, and the user service, plus integration tests for the auth endpoints. The Foundry suite covers each Solidity contract individually, including the Groth16 verifier. Neither the web nor the mobile suite currently includes end-to-end tests, despite what earlier drafts of this document claimed.
+The backend suite includes unit tests for auth, collateralization, the data pipeline, and the user service, plus integration tests for the auth endpoints. The Foundry suite covers each Solidity contract individually, including the Groth16 verifier. Neither the web nor the mobile suite currently includes end-to-end tests.
 
 ## CI/CD Pipeline
 
